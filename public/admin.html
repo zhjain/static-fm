@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static FM 管理后台</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            margin: 0;
+            color: #5a67d8;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background: #5a67d8;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #4c5bdb;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .songs-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .delete-btn {
+            background: #e53e3e;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+        
+        .delete-btn:hover {
+            background: #c53030;
+        }
+        
+        .status-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📻 Static FM 管理后台</h1>
+            <div class="controls">
+                <button id="rescanBtn">重新扫描</button>
+                <button id="nextBtn">下一首</button>
+            </div>
+        </header>
+        
+        <section class="upload-section">
+            <h2>上传新歌曲</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="songFile">选择音乐文件:</label>
+                    <input type="file" id="songFile" name="song" accept="audio/*" required>
+                </div>
+                <button type="submit">上传</button>
+            </form>
+        </section>
+        
+        <section class="songs-list">
+            <h2>歌曲列表</h2>
+            <table id="songsTable">
+                <thead>
+                    <tr>
+                        <th>歌曲名</th>
+                        <th>上传时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="songsTableBody">
+                    <!-- 歌曲列表将通过JavaScript动态填充 -->
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="status-bar">
+            <div class="status-item">
+                当前播放: <span id="currentSong">未知</span>
+            </div>
+            <div class="status-item">
+                状态: <span id="playerStatus">未知</span>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadForm = document.getElementById('uploadForm');
+            const songsTableBody = document.getElementById('songsTableBody');
+            const rescanBtn = document.getElementById('rescanBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentSongEl = document.getElementById('currentSong');
+            const playerStatusEl = document.getElementById('playerStatus');
+            
+            // 上传歌曲
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                const fileInput = document.getElementById('songFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert('请选择一个文件');
+                    return;
+                }
+                
+                formData.append('song', file);
+                
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('上传失败: ' + data.error);
+                    } else {
+                        alert('上传成功!');
+                        loadSongs(); // 重新加载歌曲列表
+                        fileInput.value = ''; // 清空文件输入
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('上传失败: ' + error.message);
+                });
+            });
+            
+            // 重新扫描按钮
+            rescanBtn.addEventListener('click', function() {
+                fetch('/api/control/rescan', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('重新扫描完成');
+                    loadSongs();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败: ' + error.message);
+                });
+            });
+            
+            // 下一首按钮
+            nextBtn.addEventListener('click', function() {
+                fetch('/api/control/next', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('已切换到下一首');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败: ' + error.message);
+                });
+            });
+            
+            // 加载歌曲列表
+            function loadSongs() {
+                fetch('/api/songs')
+                .then(response => response.json())
+                .then(songs => {
+                    songsTableBody.innerHTML = '';
+                    
+                    songs.forEach(song => {
+                        const row = document.createElement('tr');
+                        
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = song.originalname;
+                        
+                        const timeCell = document.createElement('td');
+                        timeCell.textContent = new Date(song.uploadTime).toLocaleString();
+                        
+                        const actionCell = document.createElement('td');
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = '删除';
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.onclick = function() {
+                            deleteSong(song.id);
+                        };
+                        actionCell.appendChild(deleteBtn);
+                        
+                        row.appendChild(nameCell);
+                        row.appendChild(timeCell);
+                        row.appendChild(actionCell);
+                        
+                        songsTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('加载歌曲列表失败:', error);
+                });
+            }
+            
+            // 删除歌曲
+            function deleteSong(songId) {
+                if (!confirm('确定要删除这首歌曲吗?')) {
+                    return;
+                }
+                
+                fetch(`/api/songs/${songId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('删除失败: ' + data.error);
+                    } else {
+                        alert('删除成功!');
+                        loadSongs(); // 重新加载歌曲列表
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('删除失败: ' + error.message);
+                });
+            }
+            
+            // 定期获取当前播放状态
+            function updateStatus() {
+                fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.currentSong) {
+                        currentSongEl.textContent = data.currentSong.originalname || '未知歌曲';
+                    } else {
+                        currentSongEl.textContent = '暂无信息';
+                    }
+                    
+                    playerStatusEl.textContent = data.isPlaying ? '正在播放' : '未播放';
+                })
+                .catch(error => {
+                    console.error('获取状态失败:', error);
+                });
+            }
+            
+            // 每5秒更新一次状态
+            setInterval(updateStatus, 5000);
+            
+            // 初始加载
+            loadSongs();
+            updateStatus();
+        });
+    </script>
+</body>
+</html>

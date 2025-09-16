@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static FM</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .player-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .now-playing {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+        
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .player-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📻 Static FM</h1>
+        
+        <div class="player-container">
+            <audio id="radioPlayer" controls class="audio-player">
+                <source src="http://localhost:8000/stream.mp3" type="audio/mpeg">
+                您的浏览器不支持音频播放。
+            </audio>
+            
+            <div class="controls">
+                <button id="playBtn">播放</button>
+                <button id="pauseBtn">暂停</button>
+                <button id="nextBtn">下一首</button>
+            </div>
+            
+            <div class="status">
+                <div class="now-playing">当前播放: <span id="currentSong">未知</span></div>
+                <div>状态: <span id="playerStatus">未连接</span></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>打开即听，无需登录，完全同步的纯粹听歌体验</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const player = document.getElementById('radioPlayer');
+            const playBtn = document.getElementById('playBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentSongEl = document.getElementById('currentSong');
+            const playerStatusEl = document.getElementById('playerStatus');
+            
+            // 播放功能
+            playBtn.addEventListener('click', function() {
+                player.play();
+                playerStatusEl.textContent = '正在播放';
+            });
+            
+            // 暂停功能
+            pauseBtn.addEventListener('click', function() {
+                player.pause();
+                playerStatusEl.textContent = '已暂停';
+            });
+            
+            // 下一首功能
+            nextBtn.addEventListener('click', function() {
+                fetch('/api/control/next', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('下一首:', data);
+                    playerStatusEl.textContent = '正在切换歌曲...';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+            
+            // 定期获取当前播放状态
+            function updateStatus() {
+                fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.currentSong) {
+                        currentSongEl.textContent = data.currentSong.originalname || '未知歌曲';
+                    } else {
+                        currentSongEl.textContent = '暂无信息';
+                    }
+                    
+                    if (data.isPlaying) {
+                        playerStatusEl.textContent = '正在播放';
+                    } else {
+                        playerStatusEl.textContent = '未播放';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取状态失败:', error);
+                });
+            }
+            
+            // 每5秒更新一次状态
+            setInterval(updateStatus, 5000);
+            
+            // 初始更新
+            updateStatus();
+        });
+    </script>
+</body>
+</html>
