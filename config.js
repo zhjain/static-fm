@@ -1,8 +1,8 @@
 export default {
     icecast: {
-        host: 'localhost',
-        port: 8000,
-        password: 'your_source_password_here',
+        host: '127.0.0.1',
+        port: 8900,
+        password: 'hackme',
         mount: '/stream.mp3' // 电台频道名
     },
     server: {

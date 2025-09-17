@@ -4,7 +4,11 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
+import { createRequire } from 'module';
 import config from './config.js';
+
+const require = createRequire(import.meta.url);
+const http = require('http');
 
 const app = express();
 const PORT = config.server.port;
@@ -12,6 +16,28 @@ const PORT = config.server.port;
 // 中间件
 app.use(cors());
 app.use(express.json());
+
+// 添加代理路由解决跨域问题
+app.get('/stream.mp3', (req, res) => {
+  // 代理到 Icecast 服务器
+  const url = `http://${config.icecast.host}:${config.icecast.port}${config.icecast.mount}`;
+  
+  http.get(url, (proxyRes) => {
+    // 设置响应头
+    res.status(proxyRes.statusCode);
+    for (const key in proxyRes.headers) {
+      res.setHeader(key, proxyRes.headers[key]);
+    }
+    
+    // 转发数据
+    proxyRes.pipe(res);
+  }).on('error', (err) => {
+    console.error('Proxy error:', err);
+    res.status(500).send('Proxy error');
+  });
+});
+
+// 静态文件中间件（放在路由之后）
 app.use(express.static('public'));
 
 // 确保必要的目录存在
@@ -167,12 +193,19 @@ function startStreaming(songPath) {
     '-re', // 实时读取输入
     '-i', songPath, // 输入文件
     '-f', 'mp3', // 输出格式
+    '-b:a', '96k', // 降低音频比特率以减少CPU和带宽使用
+    '-ar', '44100', // 固定采样率
+    '-ac', '2', // 固定声道数
     '-content_type', 'audio/mpeg',
     '-ice_name', 'Static FM',
     '-ice_description', 'Personal radio streaming',
     '-ice_genre', 'Various',
     '-ice_public', '0',
     '-password', icecastConfig.password,
+    '-listen', '1', // 启用监听模式，有助于稳定连接
+    '-bufsize', '32k', // 减小缓冲区大小以适应低内存环境
+    '-legacy_icecast', '1', // 使用传统Icecast协议
+    '-mpegts_flags', 'resend_headers', // 重新发送标头
     `icecast://${icecastConfig.host}:${icecastConfig.port}${icecastConfig.mount}`
   ];
 
@@ -186,6 +219,10 @@ function startStreaming(songPath) {
   
   ffmpegProcess.stderr.on('data', (data) => {
     console.log(`FFmpeg stderr: ${data}`);
+  });
+  
+  ffmpegProcess.on('error', (err) => {
+    console.error('FFmpeg process error:', err);
   });
   
   ffmpegProcess.on('close', (code) => {
