@@ -6,7 +6,29 @@ const logger = require('./logger');
 const pinoHttp = require('pino-http')({
     logger: logger,
     autoLogging: true,
-    useLevel: 'info'
+    useLevel: 'info',
+    serializers: {
+        req: (req) => {
+            return {
+                method: req.method,
+                url: req.url,
+                headers: {
+                    host: req.headers.host,
+                    'user-agent': req.headers['user-agent']
+                },
+                remoteAddress: req.remoteAddress || req.ip
+            };
+        },
+        res: (res) => {
+            return {
+                statusCode: res.statusCode,
+                headers: {
+                    'content-type': res.headers['content-type'],
+                    'content-length': res.headers['content-length']
+                }
+            };
+        }
+    }
 });
 
 const app = express();
