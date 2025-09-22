@@ -17,6 +17,7 @@ help:
 	@echo "make install-icecast   - 安装Icecast2"
 	@echo "make install-liquidsoap - 安装Liquidsoap"
 	@echo "make configure-icecast - 复制Icecast配置文件到/etc目录"
+	@echo "make setup-directories - 创建Liquidsoap所需的目录"
 	@echo "make start             - 启动所有服务（Express, Icecast, Liquidsoap）"
 	@echo "make dev               - 开发模式启动（带热重载）"
 	@echo "make stop              - 停止所有服务"
@@ -103,15 +104,34 @@ configure-icecast:
 		echo "未找到Icecast配置文件: $(ICECAST_CONFIG)"; \
 	fi
 
+# 创建Liquidsoap所需的目录
+.PHONY: setup-directories
+setup-directories:
+	@echo "正在创建Liquidsoap所需的目录..."
+	@if [ ! -d "/var/run/liquidsoap" ]; then \
+		sudo mkdir -p /var/run/liquidsoap; \
+		sudo chown $(USER):$(USER) /var/run/liquidsoap; \
+		echo "已创建 /var/run/liquidsoap 目录"; \
+	else \
+		echo "/var/run/liquidsoap 目录已存在"; \
+	fi
+	@if [ ! -d "/var/log/liquidsoap" ]; then \
+		sudo mkdir -p /var/log/liquidsoap; \
+		sudo chown $(USER):$(USER) /var/log/liquidsoap; \
+		echo "已创建 /var/log/liquidsoap 目录"; \
+	else \
+		echo "/var/log/liquidsoap 目录已存在"; \
+	fi
+
 # 启动所有服务
 .PHONY: start
-start: icecast-systemctl-start liquidsoap-start
+start: setup-directories icecast-systemctl-start liquidsoap-start
 	@echo "正在启动Express服务器..."
 	node server.js
 
 # 开发模式启动（如果使用nodemon）
 .PHONY: dev
-dev: icecast-start liquidsoap-start
+dev: setup-directories icecast-start liquidsoap-start
 	@echo "正在以开发模式启动服务器..."
 	@if [ -f $(NODE_BIN)/nodemon ]; then \
 		$(NODE_BIN)/nodemon server.js; \
@@ -244,7 +264,7 @@ icecast-systemctl-stop:
 liquidsoap-start:
 	@echo "正在启动Liquidsoap服务..."
 	@if command -v liquidsoap &> /dev/null; then \
-		liquidsoap -d $(LIQUIDSOAP_CONFIG) & \
+		liquidsoap -d --pidfile /var/run/liquidsoap/liquidsoap.pid $(LIQUIDSOAP_CONFIG) & \
 		echo "Liquidsoap服务已启动"; \
 	else \
 		echo "未找到Liquidsoap，请先安装Liquidsoap"; \
