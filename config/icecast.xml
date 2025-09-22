@@ -36,6 +36,7 @@
         <fallback-override>1</fallback-override>
         <fallback-when-full>1</fallback-when-full>
         <hidden>0</hidden>
+        <public>1</public>
         <no-yp>1</no-yp>
         <stream-name>Static.FM</stream-name>
         <stream-description>24 hours no stop</stream-description>

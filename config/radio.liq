@@ -1,17 +1,16 @@
-set("log.file.path", "./logs/liquidsoap.log")
-set("log.stdout", true)
-set("log.level", 3)
+settings.log.file.path.set("./logs/liquidsoap.log")
+settings.log.stdout.set(true)
+settings.log.level.set(3)
 
-set("server.telnet", true)
-set("server.telnet.bind_addr", "127.0.0.1")
-set("server.telnet.port", 1234)
+settings.server.telnet.set(true)
+settings.server.telnet.bind_addr.set("127.0.0.1")
+settings.server.telnet.port.set(1234)
 
-set("audio.converter.samplerate.libsamplerate.quality", "best")
-set("decoder.file_extensions.mp3", ["mp3"])
-set("decoder.file_extensions.flac", ["flac"])
-set("decoder.file_extensions.ogg", ["ogg", "oga"])
-set("decoder.file_extensions.wav", ["wav"])
-
+settings.audio.converter.samplerate.libsamplerate.quality.set("best")
+settings.decoder.file_extensions.mp3.set(["mp3"])
+settings.decoder.file_extensions.flac.set(["flac"])
+settings.decoder.file_extensions.ogg.set(["ogg", "oga"])
+settings.decoder.file_extensions.wav.set(["wav"])
 
 playlist_file = "./playlists/current.m3u"
 
