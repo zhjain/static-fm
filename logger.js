@@ -29,7 +29,8 @@ const logger = pino(
             options: {
                 colorize: true,
                 translateTime: 'SYS:standard',
-                ignore: 'pid,hostname'
+                ignore: 'pid,hostname',
+                singleLine: true  // 改为单行显示
             }
         }
     },

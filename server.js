@@ -7,15 +7,17 @@ const pinoHttp = require('pino-http')({
     logger: logger,
     autoLogging: true,
     useLevel: 'info',
+    customSuccessMessage: function(req, res) {
+        return `${req.method} ${req.url} ${res.statusCode} ${res.headers['content-length'] || 0}b sent`;
+    },
+    customErrorMessage: function(req, res, err) {
+        return `${req.method} ${req.url} ${res.statusCode} ${err.message}`;
+    },
     serializers: {
         req: (req) => {
             return {
                 method: req.method,
                 url: req.url,
-                headers: {
-                    host: req.headers.host,
-                    'user-agent': req.headers['user-agent']
-                },
                 remoteAddress: req.remoteAddress || req.ip
             };
         },
@@ -23,7 +25,6 @@ const pinoHttp = require('pino-http')({
             return {
                 statusCode: res.statusCode,
                 headers: {
-                    'content-type': res.headers['content-type'],
                     'content-length': res.headers['content-length']
                 }
             };
