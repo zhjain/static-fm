@@ -264,7 +264,7 @@ icecast-systemctl-stop:
 liquidsoap-start:
 	@echo "正在启动Liquidsoap服务..."
 	@if command -v liquidsoap &> /dev/null; then \
-		liquidsoap -d --pidfile /var/run/liquidsoap/liquidsoap.pid $(LIQUIDSOAP_CONFIG) & \
+		liquidsoap -d $(LIQUIDSOAP_CONFIG) & \
 		echo "Liquidsoap服务已启动"; \
 	else \
 		echo "未找到Liquidsoap，请先安装Liquidsoap"; \
