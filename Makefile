@@ -74,7 +74,7 @@ install-icecast:
 install-liquidsoap:
 	@echo "正在安装Liquidsoap..."
 	@if command -v apt-get &> /dev/null; then \
-		sudo apt-get update && sudo apt-get install -y liquidsoap; \
+		sudo apt-get update && sudo apt-get install -y liquidsoap ffmpeg; \
 	elif command -v yum &> /dev/null; then \
 		sudo yum install -y liquidsoap; \
 	elif command -v pacman &> /dev/null; then \
