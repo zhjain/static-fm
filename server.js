@@ -2,9 +2,18 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+const logger = require('./logger');
+const pinoHttp = require('pino-http')({
+    logger: logger,
+    autoLogging: true,
+    useLevel: 'info'
+});
 
 const app = express();
 const PORT = 3000;
+
+// 日志中间件
+app.use(pinoHttp);
 
 // 静态文件
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,7 +31,7 @@ function getPlaylist() {
             return JSON.parse(fs.readFileSync(playlistFile, 'utf8'));
         }
     } catch (error) {
-        console.error('获取播放列表失败:', error);
+        logger.error({ err: error }, '获取播放列表失败');
     }
     return [];
 }
@@ -35,7 +44,7 @@ function getCurrentTrack() {
             return fs.readFileSync(currentFile, 'utf8').trim();
         }
     } catch (error) {
-        console.error('获取当前播放信息失败:', error);
+        logger.error({ err: error }, '获取当前播放信息失败');
     }
     return '暂无播放信息';
 }
@@ -75,7 +84,7 @@ function getRadioInfo() {
             };
         }
     } catch (error) {
-        console.error('获取电台信息失败:', error);
+        logger.error({ err: error }, '获取电台信息失败');
     }
     
     // 默认电台信息
@@ -201,10 +210,10 @@ app.get('/api/stats', async (req, res) => {
 
 // 错误处理
 app.use((err, req, res, next) => {
-    console.error('服务器错误:', err);
-    res.status(500).json({
+    logger.error({ err }, '服务器错误');
+    res.json({
         success: false,
-        error: '服务器内部错误，请稍后再试'
+        error: '服务器内部错误'
     });
 });
 
@@ -217,8 +226,8 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`http://localhost:${PORT}`)
-  console.log(`http://localhost:${PORT}/stats`)
+  logger.info(`服务器运行在 http://localhost:${PORT}`);
+  logger.info('电台管理系统已启动');
 })
 
 module.exports = app;
