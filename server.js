@@ -2,35 +2,9 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
-const logger = require('./logger');
-const pinoHttp = require('pino-http')({
-    logger: logger,
-    autoLogging: true,
-    useLevel: 'info',
-    customSuccessMessage: function(req, res) {
-        return `${req.method} ${req.url} ${res.statusCode} ${res.headers['content-length'] || 0}b sent`;
-    },
-    customErrorMessage: function(req, res, err) {
-        return `${req.method} ${req.url} ${res.statusCode} ${err.message}`;
-    },
-    serializers: {
-        req: (req) => {
-            return {
-                method: req.method,
-                url: req.url,
-                remoteAddress: req.remoteAddress || req.ip
-            };
-        },
-        res: (res) => {
-            return {
-                statusCode: res.statusCode,
-                headers: {
-                    'content-length': res.headers['content-length']
-                }
-            };
-        }
-    }
-});
+const pinoHttp = require('./middleware/pino');
+const logger = require('./utils/logger');
+
 
 const app = express();
 const PORT = 3000;
@@ -85,7 +59,7 @@ function getRadioStatus() {
                 resolve({
                     liquidsoap: isRunning,
                     icecast: icecastRunning,
-                    streamUrl: 'http://localhost:8000/radio'
+                    streamUrl: 'http://localhost:8900/radio'
                 });
             });
         });
