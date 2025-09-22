@@ -5,83 +5,271 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>网络电台</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            background-color: #f5f5f5;
             color: #333;
         }
+
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.1),
+                0 8px 25px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        h1, h2 {
-            color: #2c3e50;
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
         }
-        .status {
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 4px;
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            letter-spacing: -0.02em;
         }
-        .online {
-            background-color: #d4edda;
-            color: #155724;
+
+        .player-section {
+            margin-bottom: 40px;
         }
-        .offline {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .track-display {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
         }
-        .track-info {
-            background-color: #e2e3e5;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+
+        .track-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
         }
-        .playlist {
-            list-style: none;
-            padding: 0;
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
-        .playlist li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+
+        .track-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
         }
-        .playlist li:last-child {
-            border-bottom: none;
+
+        .track-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            line-height: 1.4;
+            min-height: 1.8rem;
         }
+
         .controls {
-            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
         }
-        .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: #3498db;
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .volume-icon {
+            width: 20px;
+            height: 20px;
+            fill: #6c757d;
+        }
+
+        #volume-slider {
+            -webkit-appearance: none;
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #667eea 0%, #667eea var(--volume, 50%), #e2e8f0 var(--volume, 50%), #e2e8f0 100%);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        #volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .mute-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            text-decoration: none;
-            margin-right: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
         }
-        .btn:hover {
-            background-color: #2980b9;
+
+        .mute-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
         }
-        footer {
+
+        .mute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .mute-btn:hover::before {
+            left: 100%;
+        }
+
+        .mute-btn:active {
+            transform: translateY(0);
+        }
+
+        .mute-btn.muted {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            box-shadow: 0 4px 14px rgba(229, 62, 62, 0.4);
+        }
+
+        .mute-btn.muted:hover {
+            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.5);
+        }
+
+        audio {
+            display: none;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 12px;
+            padding: 16px;
             margin-top: 30px;
-            text-align: center;
-            font-size: 0.9em;
-            color: #7f8c8d;
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: #7f8c8d;
+
+        .stats-content {
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .loading-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #48bb78;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: statusBlink 2s infinite;
+        }
+
+        @keyframes statusBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .error-state {
+            color: #e53e3e;
+        }
+
+        .error-state .status-indicator {
+            background: #e53e3e;
+            animation: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .track-display {
+                padding: 20px 15px;
+            }
+
+            #volume-slider {
+                width: 120px;
+            }
         }
     </style>
 </head>
@@ -89,46 +277,78 @@
     <div class="container">
         <h1>网络电台</h1>
         
-        <div id="status-container" class="status">
-            <h2>加载中...</h2>
+        <div class="player-section">
+            <div class="track-display">
+                <div class="track-label">正在播放</div>
+                <div id="track-title" class="track-title loading-pulse">加载中...</div>
+            </div>
+            
+            <div class="controls">
+                <div class="volume-control">
+                    <svg class="volume-icon" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm10.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16 12c0-2.76-1.69-5.13-4.1-6.1l-.9.85C12.92 7.74 14 9.76 14 12s-1.08 4.26-2.9 5.25l.9.85C14.31 17.13 16 14.76 16 12z"/>
+                    </svg>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50">
+                    <span id="volume-display">50%</span>
+                </div>
+                
+                <button id="mute-btn" class="mute-btn" onclick="toggleMute()">
+                    <span class="status-indicator"></span>静音
+                </button>
+            </div>
+            
+            <audio id="radio-audio" src="http://127.0.0.1:8900/radio"></audio>
         </div>
         
-        <div id="track-info" class="track-info">
-            <h2>当前播放</h2>
-            <p>加载中...</p>
+        <div class="stats">
+            <div id="stats-content" class="stats-content">
+                &copy; <span id="current-year"></span> 网络电台
+            </div>
         </div>
-        
-        <div id="radio-info" class="radio-info">
-            <h2>电台信息</h2>
-            <p>加载中...</p>
-        </div>
-        
-        <div class="controls">
-            <audio controls src="http://127.0.0.1:8900/radio"> </audio>
-            <button class="btn" onclick="controlRadio('skip')">跳过当前曲目</button>
-            <button class="btn" onclick="controlRadio('reload')">重载播放列表</button>
-            <a href="/stats" class="btn">查看统计</a>
-        </div>
-        
-        <h2>播放列表 (前10首)</h2>
-        <ul id="playlist" class="playlist">
-            <li class="loading">加载中...</li>
-        </ul>
-        
-        <footer id="footer">
-            &copy; <span id="current-year"></span> 网络电台
-        </footer>
     </div>
 
     <script>
         // 设置当前年份
         document.getElementById('current-year').textContent = new Date().getFullYear();
         
-        // 页面加载完成后获取数据
+        // 获取元素
+        const audioElement = document.getElementById('radio-audio');
+        const muteButton = document.getElementById('mute-btn');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeDisplay = document.getElementById('volume-display');
+        const trackTitle = document.getElementById('track-title');
+        const statsContent = document.getElementById('stats-content');
+        
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             fetchRadioStatus();
-            fetchPlaylist();
+            setupVolumeControl();
+            audioElement.volume = 0.5;
         });
+        
+        // 设置音量控制
+        function setupVolumeControl() {
+            volumeSlider.addEventListener('input', function() {
+                const volume = this.value / 100;
+                audioElement.volume = volume;
+                volumeDisplay.textContent = this.value + '%';
+                
+                // 更新滑块背景
+                this.style.setProperty('--volume', this.value + '%');
+                
+                // 自动更新静音状态
+                if (volume === 0) {
+                    audioElement.muted = true;
+                    updateMuteButton(true);
+                } else if (audioElement.muted) {
+                    audioElement.muted = false;
+                    updateMuteButton(false);
+                }
+            });
+            
+            // 初始化滑块样式
+            volumeSlider.style.setProperty('--volume', '50%');
+        }
         
         // 获取电台状态
         function fetchRadioStatus() {
@@ -137,6 +357,7 @@
                 .then(data => {
                     if (data.success) {
                         updateRadioStatus(data.data);
+                        clearErrorState();
                     } else {
                         showError('获取电台状态失败');
                     }
@@ -147,125 +368,66 @@
                 });
         }
         
-        // 获取播放列表
-        function fetchPlaylist() {
-            fetch('/api/playlist')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updatePlaylist(data.data);
-                    } else {
-                        showError('获取播放列表失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('连接服务器失败');
-                });
-        }
-        
         // 更新电台状态
         function updateRadioStatus(data) {
-            // 更新状态区域
-            const statusContainer = document.getElementById('status-container');
-            statusContainer.className = `status ${data.liquidsoap && data.icecast ? 'online' : 'offline'}`;
-            
-            let statusHTML = `
-                <h2>电台状态: ${data.liquidsoap && data.icecast ? '在线' : '离线'}</h2>
-                <p>Liquidsoap: ${data.liquidsoap ? '运行中' : '已停止'}</p>
-                <p>Icecast: ${data.icecast ? '运行中' : '已停止'}</p>
-            `;
-            
-            if (data.liquidsoap && data.icecast) {
-                statusHTML += `<p>收听地址: <a href="${data.streamUrl}" target="_blank">${data.streamUrl}</a></p>`;
-            }
-            
-            statusContainer.innerHTML = statusHTML;
-            
             // 更新当前播放信息
-            document.getElementById('track-info').innerHTML = `
-                <h2>当前播放</h2>
-                <p>${data.currentTrack || '暂无播放信息'}</p>
-            `;
+            trackTitle.textContent = data.currentTrack || '暂无播放信息';
+            trackTitle.classList.remove('loading-pulse');
             
-            // 更新电台信息
-            document.getElementById('radio-info').innerHTML = `
-                <h2>电台信息</h2>
-                <p>名称: ${data.name || '网络电台'}</p>
-                <p>描述: ${data.description || '一个私人的、不间断的网络音频流服务'}</p>
-                <p>总曲目数: ${data.totalTracks || 0}</p>
-            `;
-            
-            // 更新页脚
-            document.getElementById('footer').innerHTML = `
+            // 更新统计信息
+            statsContent.innerHTML = `
                 &copy; ${new Date().getFullYear()} 网络电台 | 总曲目: ${data.totalTracks || 0}
             `;
         }
         
-        // 更新播放列表
-        function updatePlaylist(playlist) {
-            const playlistElement = document.getElementById('playlist');
+        // 切换静音状态
+        function toggleMute() {
+            const isMuted = !audioElement.muted;
+            audioElement.muted = isMuted;
+            updateMuteButton(isMuted);
             
-            if (playlist && playlist.length > 0) {
-                let playlistHTML = '';
-                const displayList = playlist.slice(0, 10); // 只显示前10首
-                
-                displayList.forEach(track => {
-                    const title = track.title || '未知标题';
-                    const artist = track.artist || '未知艺术家';
-                    let duration = '';
-                    
-                    if (track.duration) {
-                        const minutes = Math.floor(track.duration / 60);
-                        const seconds = (track.duration % 60).toString().padStart(2, '0');
-                        duration = `(${minutes}:${seconds})`;
-                    }
-                    
-                    playlistHTML += `
-                        <li>
-                            <strong>${title}</strong> - 
-                            ${artist}
-                            ${duration}
-                        </li>
-                    `;
-                });
-                
-                playlistElement.innerHTML = playlistHTML;
-            } else {
-                playlistElement.innerHTML = '<li>播放列表为空</li>';
+            // 如果取消静音且音量为0，设置为50%
+            if (!isMuted && audioElement.volume === 0) {
+                audioElement.volume = 0.5;
+                volumeSlider.value = 50;
+                volumeDisplay.textContent = '50%';
+                volumeSlider.style.setProperty('--volume', '50%');
             }
         }
         
-        // 控制电台
-        function controlRadio(action) {
-            fetch(`/api/control/${action}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    setTimeout(() => {
-                        fetchRadioStatus();
-                        fetchPlaylist();
-                    }, 1000);
-                } else {
-                    alert('操作失败: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('操作请求失败');
-            });
+        // 更新静音按钮状态
+        function updateMuteButton(isMuted) {
+            if (isMuted) {
+                muteButton.textContent = '取消静音';
+                muteButton.classList.add('muted');
+            } else {
+                muteButton.textContent = '静音';
+                muteButton.classList.remove('muted');
+            }
+            
+            // 更新状态指示器
+            const indicator = muteButton.querySelector('.status-indicator');
+            muteButton.innerHTML = `<span class="status-indicator"></span>${muteButton.textContent}`;
         }
         
-        // 显示错误信息
+        // 显示错误状态
         function showError(message) {
-            alert('错误: ' + message);
+            trackTitle.textContent = message;
+            trackTitle.classList.remove('loading-pulse');
+            trackTitle.classList.add('error-state');
+            
+            // 更新按钮状态
+            muteButton.classList.add('error-state');
+        }
+        
+        // 清除错误状态
+        function clearErrorState() {
+            trackTitle.classList.remove('error-state');
+            muteButton.classList.remove('error-state');
         }
         
         // 定时刷新数据
-        setInterval(fetchRadioStatus, 30000); // 每30秒刷新一次状态
+        setInterval(fetchRadioStatus, 30000);
     </script>
 </body>
 </html>
