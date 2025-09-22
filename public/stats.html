@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电台统计</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: #e2e3e5;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .artist-list {
+            list-style: none;
+            padding: 0;
+        }
+        .artist-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .artist-list li:last-child {
+            border-bottom: none;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>电台统计</h1>
+        
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">...</div>
+                <div class="stat-label">加载中</div>
+            </div>
+        </div>
+        
+        <div class="current-status" id="current-status">
+            <h2>当前状态</h2>
+            <p>加载中...</p>
+        </div>
+        
+        <h2>热门艺术家</h2>
+        <ul class="artist-list" id="artist-list">
+            <li class="loading">加载中...</li>
+        </ul>
+        
+        <div style="margin-top: 20px;">
+            <a href="/" class="btn">返回首页</a>
+        </div>
+        
+        <footer id="footer">
+            &copy; <span id="current-year"></span> 网络电台 | 统计数据更新时间: <span id="update-time"></span>
+        </footer>
+    </div>
+
+    <script>
+        // 设置当前年份和更新时间
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        document.getElementById('update-time').textContent = new Date().toLocaleString();
+        
+        // 页面加载完成后获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchStats();
+        });
+        
+        // 获取统计数据
+        function fetchStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStats(data.data);
+                    } else {
+                        showError('获取统计数据失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('连接服务器失败');
+                });
+        }
+        
+        // 更新统计数据
+        function updateStats(stats) {
+            // 更新统计卡片
+            const statsGrid = document.getElementById('stats-grid');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalTracks || 0}</div>
+                    <div class="stat-label">总曲目数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalDuration || 0}</div>
+                    <div class="stat-label">总时长(分钟)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalArtists || 0}</div>
+                    <div class="stat-label">艺术家数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.uptime || 0}</div>
+                    <div class="stat-label">运行时间(分钟)</div>
+                </div>
+            `;
+            
+            // 更新当前状态
+            const currentStatus = document.getElementById('current-status');
+            currentStatus.innerHTML = `
+                <h2>当前状态</h2>
+                <p>电台状态: ${stats.status && stats.status.liquidsoap && stats.status.icecast ? '在线' : '离线'}</p>
+                <p>当前播放: ${stats.currentTrack || '暂无播放信息'}</p>
+            `;
+            
+            // 更新艺术家列表
+            const artistList = document.getElementById('artist-list');
+            
+            if (stats.artists && stats.artists.length > 0) {
+                let artistsHTML = '';
+                
+                stats.artists.forEach(artist => {
+                    artistsHTML += `<li>${artist}</li>`;
+                });
+                
+                artistList.innerHTML = artistsHTML;
+            } else {
+                artistList.innerHTML = '<li>暂无艺术家信息</li>';
+            }
+            
+            // 更新页脚
+            document.getElementById('update-time').textContent = new Date().toLocaleString();
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            alert('错误: ' + message);
+        }
+    </script>
+</body>
+</html>

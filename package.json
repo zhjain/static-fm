@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "一个私人的、不间断的网络音频流服务",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"

@@ -3,195 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Static FM</title>
+    <title>网络电台</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            line-height: 1.6;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        
-        .container {
-            text-align: center;
-            max-width: 800px;
             padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
         }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .player-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 20px 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        h1, h2 {
+            color: #2c3e50;
         }
-        
-        .audio-player {
-            width: 100%;
-            margin: 20px 0;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
         .status {
             margin: 20px 0;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 4px;
         }
-        
-        .now-playing {
-            font-size: 1.2rem;
-            margin: 10px 0;
+        .online {
+            background-color: #d4edda;
+            color: #155724;
         }
-        
+        .offline {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .track-info {
+            background-color: #e2e3e5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .playlist {
+            list-style: none;
+            padding: 0;
+        }
+        .playlist li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .playlist li:last-child {
+            border-bottom: none;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
         footer {
             margin-top: 30px;
             text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.8;
+            font-size: 0.9em;
+            color: #7f8c8d;
         }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .player-container {
-                padding: 20px;
-            }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #7f8c8d;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📻 Static FM</h1>
+        <h1>网络电台</h1>
         
-        <div class="player-container">
-            <audio id="radioPlayer" controls class="audio-player">
-                <source src="/stream.mp3" type="audio/mpeg">
-                您的浏览器不支持音频播放。
-            </audio>
-            
-            <div class="controls">
-                <button id="playBtn">播放</button>
-                <button id="pauseBtn">暂停</button>
-                <button id="nextBtn">下一首</button>
-            </div>
-            
-            <div class="status">
-                <div class="now-playing">当前播放: <span id="currentSong">未知</span></div>
-                <div>状态: <span id="playerStatus">未连接</span></div>
-            </div>
+        <div id="status-container" class="status">
+            <h2>加载中...</h2>
         </div>
         
-        <footer>
-            <p>打开即听，无需登录，完全同步的纯粹听歌体验</p>
+        <div id="track-info" class="track-info">
+            <h2>当前播放</h2>
+            <p>加载中...</p>
+        </div>
+        
+        <div id="radio-info" class="radio-info">
+            <h2>电台信息</h2>
+            <p>加载中...</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="controlRadio('skip')">跳过当前曲目</button>
+            <button class="btn" onclick="controlRadio('reload')">重载播放列表</button>
+            <a href="/stats" class="btn">查看统计</a>
+        </div>
+        
+        <h2>播放列表 (前10首)</h2>
+        <ul id="playlist" class="playlist">
+            <li class="loading">加载中...</li>
+        </ul>
+        
+        <footer id="footer">
+            &copy; <span id="current-year"></span> 网络电台
         </footer>
     </div>
 
     <script>
+        // 设置当前年份
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // 页面加载完成后获取数据
         document.addEventListener('DOMContentLoaded', function() {
-            const player = document.getElementById('radioPlayer');
-            const playBtn = document.getElementById('playBtn');
-            const pauseBtn = document.getElementById('pauseBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const currentSongEl = document.getElementById('currentSong');
-            const playerStatusEl = document.getElementById('playerStatus');
-            
-            // 播放功能
-            playBtn.addEventListener('click', function() {
-                player.play();
-                playerStatusEl.textContent = '正在播放';
-            });
-            
-            // 暂停功能
-            pauseBtn.addEventListener('click', function() {
-                player.pause();
-                playerStatusEl.textContent = '已暂停';
-            });
-            
-            // 下一首功能
-            nextBtn.addEventListener('click', function() {
-                fetch('/api/control/next', {
-                    method: 'POST'
-                })
+            fetchRadioStatus();
+            fetchPlaylist();
+        });
+        
+        // 获取电台状态
+        function fetchRadioStatus() {
+            fetch('/api/status')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('下一首:', data);
-                    playerStatusEl.textContent = '正在切换歌曲...';
+                    if (data.success) {
+                        updateRadioStatus(data.data);
+                    } else {
+                        showError('获取电台状态失败');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    showError('连接服务器失败');
                 });
-            });
-            
-            // 定期获取当前播放状态
-            function updateStatus() {
-                fetch('/api/status')
+        }
+        
+        // 获取播放列表
+        function fetchPlaylist() {
+            fetch('/api/playlist')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.currentSong) {
-                        currentSongEl.textContent = data.currentSong.originalname || '未知歌曲';
+                    if (data.success) {
+                        updatePlaylist(data.data);
                     } else {
-                        currentSongEl.textContent = '暂无信息';
-                    }
-                    
-                    if (data.isPlaying) {
-                        playerStatusEl.textContent = '正在播放';
-                    } else {
-                        playerStatusEl.textContent = '未播放';
+                        showError('获取播放列表失败');
                     }
                 })
                 .catch(error => {
-                    console.error('获取状态失败:', error);
+                    console.error('Error:', error);
+                    showError('连接服务器失败');
                 });
+        }
+        
+        // 更新电台状态
+        function updateRadioStatus(data) {
+            // 更新状态区域
+            const statusContainer = document.getElementById('status-container');
+            statusContainer.className = `status ${data.liquidsoap && data.icecast ? 'online' : 'offline'}`;
+            
+            let statusHTML = `
+                <h2>电台状态: ${data.liquidsoap && data.icecast ? '在线' : '离线'}</h2>
+                <p>Liquidsoap: ${data.liquidsoap ? '运行中' : '已停止'}</p>
+                <p>Icecast: ${data.icecast ? '运行中' : '已停止'}</p>
+            `;
+            
+            if (data.liquidsoap && data.icecast) {
+                statusHTML += `<p>收听地址: <a href="${data.streamUrl}" target="_blank">${data.streamUrl}</a></p>`;
             }
             
-            // 每5秒更新一次状态
-            setInterval(updateStatus, 5000);
+            statusContainer.innerHTML = statusHTML;
             
-            // 初始更新
-            updateStatus();
-        });
+            // 更新当前播放信息
+            document.getElementById('track-info').innerHTML = `
+                <h2>当前播放</h2>
+                <p>${data.currentTrack || '暂无播放信息'}</p>
+            `;
+            
+            // 更新电台信息
+            document.getElementById('radio-info').innerHTML = `
+                <h2>电台信息</h2>
+                <p>名称: ${data.name || '网络电台'}</p>
+                <p>描述: ${data.description || '一个私人的、不间断的网络音频流服务'}</p>
+                <p>总曲目数: ${data.totalTracks || 0}</p>
+            `;
+            
+            // 更新页脚
+            document.getElementById('footer').innerHTML = `
+                &copy; ${new Date().getFullYear()} 网络电台 | 总曲目: ${data.totalTracks || 0}
+            `;
+        }
+        
+        // 更新播放列表
+        function updatePlaylist(playlist) {
+            const playlistElement = document.getElementById('playlist');
+            
+            if (playlist && playlist.length > 0) {
+                let playlistHTML = '';
+                const displayList = playlist.slice(0, 10); // 只显示前10首
+                
+                displayList.forEach(track => {
+                    const title = track.title || '未知标题';
+                    const artist = track.artist || '未知艺术家';
+                    let duration = '';
+                    
+                    if (track.duration) {
+                        const minutes = Math.floor(track.duration / 60);
+                        const seconds = (track.duration % 60).toString().padStart(2, '0');
+                        duration = `(${minutes}:${seconds})`;
+                    }
+                    
+                    playlistHTML += `
+                        <li>
+                            <strong>${title}</strong> - 
+                            ${artist}
+                            ${duration}
+                        </li>
+                    `;
+                });
+                
+                playlistElement.innerHTML = playlistHTML;
+            } else {
+                playlistElement.innerHTML = '<li>播放列表为空</li>';
+            }
+        }
+        
+        // 控制电台
+        function controlRadio(action) {
+            fetch(`/api/control/${action}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    setTimeout(() => {
+                        fetchRadioStatus();
+                        fetchPlaylist();
+                    }, 1000);
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作请求失败');
+            });
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            alert('错误: ' + message);
+        }
+        
+        // 定时刷新数据
+        setInterval(fetchRadioStatus, 30000); // 每30秒刷新一次状态
     </script>
 </body>
 </html>

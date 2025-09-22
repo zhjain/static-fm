@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        .error-icon {
+            font-size: 60px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8d7da;
+            border-radius: 4px;
+            color: #721c24;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">⚠️</div>
+        <h1 id="error-title">发生错误</h1>
+        <div class="error-message" id="error-message">
+            未知错误
+        </div>
+        <a href="/" class="btn">返回首页</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从URL参数中获取错误信息
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorTitle = urlParams.get('title');
+            const errorMessage = urlParams.get('message');
+            
+            // 更新错误标题和消息
+            if (errorTitle) {
+                document.getElementById('error-title').textContent = errorTitle;
+                document.title = errorTitle;
+            }
+            
+            if (errorMessage) {
+                document.getElementById('error-message').textContent = errorMessage;
+            }
+        });
+    </script>
+</body>
+</html>

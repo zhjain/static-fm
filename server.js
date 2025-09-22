@@ -6,10 +6,6 @@ const { exec } = require('child_process');
 const app = express();
 const PORT = 3000;
 
-// 设置模板引擎
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 // 静态文件
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -64,23 +60,39 @@ function getRadioStatus() {
     });
 }
 
+// 获取电台信息
+function getRadioInfo() {
+    try {
+        const configFile = path.join(__dirname, 'config.js');
+        if (fs.existsSync(configFile)) {
+            const config = require('./config.js');
+            return {
+                name: config.radioName || '网络电台',
+                description: config.radioDescription || '一个私人的、不间断的网络音频流服务',
+                genre: config.radioGenre || '多种类型',
+                website: config.radioWebsite || '',
+                logo: config.radioLogo || '/logo.png'
+            };
+        }
+    } catch (error) {
+        console.error('获取电台信息失败:', error);
+    }
+    
+    // 默认电台信息
+    return {
+        name: '网络电台',
+        description: '一个私人的、不间断的网络音频流服务',
+        genre: '多种类型',
+        website: '',
+        logo: '/logo.png'
+    };
+}
+
 
 
 // 首页路由
 app.get('/', async (req, res) => {
-    const radioInfo = getRadioInfo();
-    const playlist = getPlaylist();
-    const currentTrack = getCurrentTrack();
-    const status = await getRadioStatus();
-    
-    res.render('index', {
-        title: '网络电台',
-        radioInfo,
-        playlist,
-        currentTrack,
-        status,
-        totalTracks: playlist.length
-    });
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // API: 获取播放列表
@@ -158,6 +170,11 @@ app.post('/api/control/:action', (req, res) => {
 
 // 统计信息页面
 app.get('/stats', async (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'stats.html'));
+});
+
+// API: 获取统计信息
+app.get('/api/stats', async (req, res) => {
     const playlist = getPlaylist();
     const status = await getRadioStatus();
     const currentTrack = getCurrentTrack();
@@ -172,30 +189,30 @@ app.get('/stats', async (req, res) => {
         totalArtists: artists.length,
         uptime: Math.round(process.uptime() / 60), // 转为分钟
         status,
-        currentTrack
+        currentTrack,
+        artists: artists.slice(0, 10) // 只显示前10个艺术家
     };
     
-    res.render('stats', {
-        title: '电台统计',
-        stats,
-        artists: artists.slice(0, 10) // 只显示前10个艺术家
+    res.json({
+        success: true,
+        data: stats
     });
 });
 
 // 错误处理
 app.use((err, req, res, next) => {
     console.error('服务器错误:', err);
-    res.status(500).render('error', {
-        title: '服务器错误',
-        message: '服务器内部错误，请稍后再试'
+    res.status(500).json({
+        success: false,
+        error: '服务器内部错误，请稍后再试'
     });
 });
 
 // 404处理
 app.use((req, res) => {
-    res.status(404).render('error', {
-        title: '页面未找到',
-        message: '您访问的页面不存在'
+    res.status(404).json({
+        success: false,
+        error: '您访问的页面不存在'
     });
 });
 
