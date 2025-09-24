@@ -1,42 +1,20 @@
 module.exports = {
-  apps : [
+  apps: [
     {
-      name   : "static-fm",
-      script : "./server.js",
-      instances : 1,
-      exec_mode : "fork",
+      name: "static-fm",
+      script: "./server.js",
+      instances: 1,
+      exec_mode: "fork",
       watch: false,
       max_memory_restart: "1G",
       env: {
         NODE_ENV: "development",
-        PORT: 3000
+        PORT: 3000,
       },
-      env_production : {
+      env_production: {
         NODE_ENV: "production",
-        PORT: 3000
-      }
-    },
-    {
-      name: "icecast",
-      script: "icecast",
-      args: "-c ./config/icecast.xml -b",
-      interpreter: "none",
-      env: {
-        NODE_ENV: "development"
+        PORT: 3000,
       },
-      // 检查icecast是否可用
-      prestart: "which icecast"
     },
-    {
-      name: "liquidsoap",
-      script: "liquidsoap",
-      args: "-d ./config/radio.liq",
-      interpreter: "none",
-      env: {
-        NODE_ENV: "development"
-      },
-      // 检查liquidsoap是否可用
-      prestart: "which liquidsoap"
-    }
-  ]
-}
+  ],
+};

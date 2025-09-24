@@ -179,9 +179,9 @@ logs:
 		echo "日志文件不存在"; \
 	fi
 
-# 后台运行服务（使用PM2）
+# 后台运行服务（使用PM2，仅Node.js应用）
 .PHONY: daemon
-daemon:
+daemon: setup-directories icecast-systemctl-start liquidsoap-start
 	@echo "正在后台启动服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 start ecosystem.config.js; \
@@ -191,7 +191,7 @@ daemon:
 
 # 停止后台运行的服务
 .PHONY: daemon-stop
-daemon-stop:
+daemon-stop: liquidsoap-stop icecast-stop
 	@echo "正在停止后台服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 stop ecosystem.config.js; \
