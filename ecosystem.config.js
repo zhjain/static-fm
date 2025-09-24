@@ -18,25 +18,25 @@ module.exports = {
     },
     {
       name: "icecast",
-      script: "which icecast",
-      args: "",
-      interpreter: "sh",
+      script: "icecast",
+      args: "-c ./config/icecast.xml -b",
+      interpreter: "none",
       env: {
         NODE_ENV: "development"
       },
-      // 使用shell脚本启动icecast
-      execute_command: "icecast -c ./config/icecast.xml -b"
+      // 检查icecast是否可用
+      prestart: "which icecast"
     },
     {
       name: "liquidsoap",
-      script: "which liquidsoap",
-      args: "",
-      interpreter: "sh",
+      script: "liquidsoap",
+      args: "-d ./config/radio.liq",
+      interpreter: "none",
       env: {
         NODE_ENV: "development"
       },
-      // 使用shell脚本启动liquidsoap
-      execute_command: "liquidsoap -d ./config/radio.liq"
+      // 检查liquidsoap是否可用
+      prestart: "which liquidsoap"
     }
   ]
 }
