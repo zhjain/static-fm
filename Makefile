@@ -25,6 +25,10 @@ help:
 	@echo "make status            - 查看所有服务状态"
 	@echo "make logs              - 查看服务器日志"
 	@echo "make clean             - 清理日志文件"
+	@echo "make daemon            - 后台运行服务（使用PM2）"
+	@echo "make daemon-stop       - 停止后台运行的服务"
+	@echo "make daemon-status     - 查看后台运行的服务状态"
+	@echo "make daemon-logs       - 查看后台服务日志"
 	@echo ""
 	@echo "Icecast相关命令:"
 	@echo "make icecast-start     - 启动Icecast服务"
@@ -173,6 +177,46 @@ logs:
 		tail -f logs/app.log; \
 	else \
 		echo "日志文件不存在"; \
+	fi
+
+# 后台运行服务（使用PM2）
+.PHONY: daemon
+daemon:
+	@echo "正在后台启动服务..."
+	@if command -v pm2 &> /dev/null; then \
+		pm2 start ecosystem.config.js; \
+	else \
+		echo "PM2未安装，请先运行 'npm install pm2 -g' 进行安装"; \
+	fi
+
+# 停止后台运行的服务
+.PHONY: daemon-stop
+daemon-stop:
+	@echo "正在停止后台服务..."
+	@if command -v pm2 &> /dev/null; then \
+		pm2 stop ecosystem.config.js; \
+	else \
+		echo "PM2未安装"; \
+	fi
+
+# 查看后台运行的服务状态
+.PHONY: daemon-status
+daemon-status:
+	@echo "检查后台服务状态..."
+	@if command -v pm2 &> /dev/null; then \
+		pm2 list; \
+	else \
+		echo "PM2未安装"; \
+	fi
+
+# 查看后台服务日志
+.PHONY: daemon-logs
+daemon-logs:
+	@echo "查看后台服务日志..."
+	@if command -v pm2 &> /dev/null; then \
+		pm2 logs static-fm; \
+	else \
+		echo "PM2未安装"; \
 	fi
 
 # 清理日志
