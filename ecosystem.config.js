@@ -16,5 +16,13 @@ module.exports = {
         PORT: 3000,
       },
     },
+    {
+      name: "radio",
+      script: "liquidsoap ./config/radio.liq",
+      instances: 1,
+      exec_mode: "fork",
+      watch: false,
+      max_memory_restart: "1G",
+    }
   ],
 };

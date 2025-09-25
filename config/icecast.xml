@@ -62,6 +62,7 @@
         <webroot>/usr/share/icecast2/web</webroot>
         <adminroot>/usr/share/icecast2/admin</adminroot>
         <alias source="/" destination="/status.xsl"/>
+        <x-forwarded-for>172.18.0.1</x-forwarded-for>
     </paths>
 
     <logging>

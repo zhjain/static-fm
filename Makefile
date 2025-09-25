@@ -181,7 +181,7 @@ logs:
 
 # 后台运行服务（使用PM2，仅Node.js应用）
 .PHONY: daemon
-daemon: setup-directories icecast-systemctl-start liquidsoap-start
+daemon: setup-directories icecast-systemctl-start
 	@echo "正在后台启动服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 start ecosystem.config.js; \
