@@ -101,9 +101,9 @@ install-all: install install-icecast install-liquidsoap
 configure-icecast:
 	@echo "正在复制Icecast配置文件到/etc目录..."
 	@if [ -f $(ICECAST_CONFIG) ]; then \
-		sudo cp $(ICECAST_CONFIG) /etc/icecast2/icecast.xml; \
-		sudo chown icecast2:icecast2 /etc/icecast2/icecast.xml; \
-		echo "Icecast配置文件已复制到/etc/icecast2/icecast.xml"; \
+		sudo cp $(ICECAST_CONFIG)  /usr/local/etc/icecast.xml; \
+		sudo chown icecast2:icecast  /usr/local/etc/icecast.xml; \
+		echo "Icecast配置文件已复制到 /usr/local/etc/icecast.xml"; \
 	else \
 		echo "未找到Icecast配置文件: $(ICECAST_CONFIG)"; \
 	fi
