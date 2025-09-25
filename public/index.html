@@ -1,215 +1,397 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>网络电台（Alpine + Wave.js 可视化）</title>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>...</title>
 
-  <!-- Alpine.js -->
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+        <!-- Alpine.js -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+            defer
+        ></script>
 
-  <!-- Wave.js (CDN from repo README) -->
-  <script src="https://cdn.jsdelivr.net/gh/foobar404/wave.js/dist/bundle.js" defer></script>
+        <!-- Wave.js (使用npm包的CDN链接) -->
+        <script src="https://cdn.jsdelivr.net/npm/@foobar404/wave@2.0.5/dist/bundle.js"></script>
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-      min-height: 100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      color:#fff;
-    }
-    .player {
-      width: 100%;
-      max-width: 760px;
-      background: rgba(255,255,255,0.06);
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      text-align:center;
-    }
-    canvas {
-      width: 100%;
-      height: 200px;
-      display:block;
-      border-radius:8px;
-      background: rgba(0,0,0,0.25);
-    }
-    .controls { margin-top: 12px; display:flex; gap:10px; align-items:center; justify-content:center; }
-    button { padding:8px 14px; border-radius:8px; border:none; cursor:pointer; background:#fff; color:#333; font-weight:600; }
-    .meta { margin-top:10px; font-size:14px; opacity:0.95; }
-    .error { color: #ffcccb; }
-  </style>
-</head>
-<body>
-  <div class="player" x-data="radioPlayer()" x-init="init()">
-    <!-- Audio element -->
-    <audio x-ref="audio" id="radio-audio" src="https://radio.startend.xyz/radio" crossorigin="anonymous"></audio>
-
-    <!-- Canvas for visualization -->
-    <canvas x-ref="canvas" id="wave-canvas" aria-hidden="true"></canvas>
-
-    <!-- Track / status -->
-    <div class="meta" :class="{ 'error': hasError }" x-text="trackTitle"></div>
-
-    <!-- Controls -->
-    <div class="controls">
-      <button @click="togglePlay" :disabled="loading" x-text="isPlaying ? '暂停' : '播放'"></button>
-      <button @click="reloadStream" title="重新连接流">重连</button>
-      <div style="min-width:120px; text-align:left;">
-        音量: <input type="range" min="0" max="1" step="0.01" x-model.number="volume" @input="setVolume" />
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function radioPlayer() {
-      return {
-        audio: null,
-        canvas: null,
-        waveInstance: null, // Wave.js 实例
-        isPlaying: false,
-        hasError: false,
-        loading: false,
-        trackTitle: "加载中...",
-        volume: 0.5,
-
-        init() {
-          // 获取引用（Alpine 确保 defer 脚本加载完成）
-          this.audio = this.$refs.audio;
-          this.canvas = this.$refs.canvas;
-
-          // 设置音量
-          this.audio.volume = this.volume;
-
-          // 绑定 audio 事件以同步 UI 状态
-          this.audio.addEventListener('play', () => { this.isPlaying = true; this.hasError = false; });
-          this.audio.addEventListener('pause', () => { this.isPlaying = false; });
-          this.audio.addEventListener('error', (e) => {
-            console.error('Audio error', e);
-            this.showError('音频播放出错');
-          });
-          this.audio.addEventListener('ended', () => { this.isPlaying = false; });
-
-          // 等待 Wave.js 脚本可用后初始化可视化（bundle.js 是 defer，所以此处通常已经可用）
-          const tryInitWave = () => {
-            if (typeof Wave === 'undefined') {
-              // 如果还没加载好，稍后重试
-              setTimeout(tryInitWave, 200);
-              return;
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
             }
-            this.setupWave();
-          };
-          tryInitWave();
 
-          // 响应窗口尺寸变化，调整 canvas 实像素尺寸以避免模糊
-          window.addEventListener('resize', () => this.resizeCanvas());
-          this.resizeCanvas();
-
-          // 可选: 启动时不自动播放。若你想自动播放可把下面注释打开（注意浏览器自动播放策略）
-          // this.togglePlay();
-        },
-
-        resizeCanvas() {
-          // 设定 canvas 的内部像素大小（避免 CSS 缩放模糊）
-          const dpr = window.devicePixelRatio || 1;
-          const rect = this.canvas.getBoundingClientRect();
-          this.canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-          this.canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-        },
-
-        setupWave() {
-          try {
-            // 通过 Wave.js 将 audio 元素与 canvas 绑定
-            // 使用全局的 Wave 构造器（来自 bundle.js）
-            this.waveInstance = new Wave(this.audio, this.canvas);
-
-            // 添加一个简单的线型波动画（Wave.js 自带动画类）
-            // 参数可调（lineWidth, lineColor, count 等）
-            this.waveInstance.addAnimation(new this.waveInstance.animations.Wave({
-              lineWidth: 2 * (window.devicePixelRatio || 1),
-              lineColor: { gradient: ['#00ffd5', '#0077ff'], rotate: 90 },
-              count: 20
-            }));
-
-            // 再加一个填充的 glob 类型动画作为叠加（可选）
-            this.waveInstance.addAnimation(new this.waveInstance.animations.Glob({
-              fillColor: { gradient: ['rgba(255,255,255,0.05)', 'rgba(0,0,0,0.0)'], rotate: 0 },
-              lineWidth: 1,
-              lineColor: "#ffffff",
-              amplitude: 0.8
-            }));
-
-            // 可根据需要添加更多 animations（Bars, Square 等）
-            // waveInstance 的动画会在 audio.play() 时自动运行动画
-
-            // 当 wave 初始化成功，显示提示
-            this.trackTitle = "准备就绪";
-            this.hasError = false;
-          } catch (err) {
-            console.error('Wave.js 初始化失败', err);
-            this.showError('可视化初始化失败');
-          }
-        },
-
-        async togglePlay() {
-          if (!this.audio) return;
-          this.loading = true;
-          try {
-            if (this.isPlaying) {
-              this.audio.pause();
-              this.isPlaying = false;
-            } else {
-              // 尝试播放流（注意浏览器自动播放策略，某些浏览器需用户与页面互动）
-              await this.audio.play();
-              this.isPlaying = true;
-              this.hasError = false;
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                    Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                color: #fff;
             }
-          } catch (err) {
-            console.error('播放失败:', err);
-            this.showError('无法播放音频（请点击允许或检查资源）');
-          } finally {
-            this.loading = false;
-          }
-        },
 
-        reloadStream() {
-          // 重新加载流（用于流断开后尝试重连）
-          try {
-            this.audio.pause();
-            // 通过重新设置 src + load 强制刷新流
-            const src = this.audio.src;
-            this.audio.src = '';
-            // small timeout to ensure reset
-            setTimeout(() => {
-              this.audio.src = src;
-              this.audio.load();
-              this.trackTitle = '正在重连...';
-              // 尝试自动播放（如果浏览器允许）
-              this.audio.play().catch(() => {
-                this.trackTitle = '已重置，点击播放';
-              });
-            }, 200);
-          } catch (err) {
-            console.error('重连失败', err);
-            this.showError('重连失败');
-          }
-        },
+            .player {
+                width: 100%;
+                max-width: 760px;
+                background: rgba(255, 255, 255, 0.06);
+                padding: 18px;
+                border-radius: 12px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+                text-align: center;
+            }
 
-        setVolume() {
-          if (this.audio) this.audio.volume = this.volume;
-        },
+            canvas {
+                width: 100%;
+                height: 200px;
+                display: block;
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.25);
+            }
 
-        showError(msg) {
-          this.trackTitle = msg;
-          this.hasError = true;
-        }
-      };
-    }
-  </script>
-</body>
+            .controls {
+                margin-top: 12px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            button {
+                padding: 8px 14px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                background: #fff;
+                color: #333;
+                font-weight: 600;
+            }
+
+            .meta {
+                margin-top: 10px;
+                font-size: 14px;
+                opacity: 0.95;
+            }
+
+            .error {
+                color: #ffcccb;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="player" x-data="radioPlayer()" x-init="init()">
+            <!-- Audio element -->
+            <audio
+                x-ref="audio"
+                id="radio-audio"
+                src="https://radio.startend.xyz/radio"
+                crossorigin="anonymous"
+            ></audio>
+
+            <!-- Canvas for visualization -->
+            <canvas x-ref="canvas" id="wave-canvas" aria-hidden="true"></canvas>
+
+            <!-- Track / status -->
+            <div
+                class="meta"
+                :class="{ 'error': hasError }"
+                x-text="trackTitle"
+            ></div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button
+                    @click="togglePlay"
+                    :disabled="loading"
+                    x-text="isPlaying ? '暂停' : '播放'"
+                ></button>
+                <button @click="reloadStream" title="重新连接流">重连</button>
+                <div style="min-width: 120px; text-align: left">
+                    音量:
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        x-model.number="volume"
+                        @input="setVolume"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function radioPlayer() {
+                return {
+                    audio: null,
+                    canvas: null,
+                    waveInstance: null, // Wave.js 实例
+                    isPlaying: false,
+                    hasError: false,
+                    loading: false,
+                    trackTitle: '加载中...',
+                    volume: 0.5,
+
+                    init() {
+                        this.audio = this.$refs.audio;
+                        this.canvas = this.$refs.canvas;
+                        this.audio.volume = this.volume;
+
+                        this.audio.addEventListener('play', () => {
+                            this.isPlaying = true;
+                            this.hasError = false;
+                            // 确保在播放时重新初始化可视化
+                            if (!this.waveInstance) {
+                                this.setupWave();
+                            }
+                        });
+                        this.audio.addEventListener('pause', () => {
+                            this.isPlaying = false;
+                        });
+                        this.audio.addEventListener('error', (e) => {
+                            console.error('Audio error', e);
+                            this.showError('音频播放出错');
+                        });
+                        this.audio.addEventListener('ended', () => {
+                            this.isPlaying = false;
+                        });
+                        // 添加timeupdate事件来确保可视化持续更新
+                        this.audio.addEventListener('timeupdate', () => {
+                            if (this.isPlaying && this.waveInstance) {
+                                // 触发可视化更新
+                                if (this.waveInstance.animationCallback) {
+                                    this.waveInstance.animationCallback();
+                                }
+                            }
+                        });
+
+                        // 等待Wave.js加载完成后再初始化
+                        const waitForWave = () => {
+                            if (typeof Wave !== 'undefined') {
+                                this.setupWave();
+                            } else {
+                                console.log('等待Wave.js加载...');
+                                setTimeout(waitForWave, 100);
+                            }
+                        };
+                        waitForWave();
+
+                        window.addEventListener('resize', () =>
+                            this.resizeCanvas(),
+                        );
+                        this.resizeCanvas();
+                    },
+
+                    resizeCanvas() {
+                        const dpr = window.devicePixelRatio || 1;
+                        const rect = this.canvas.getBoundingClientRect();
+                        this.canvas.width = Math.max(
+                            1,
+                            Math.floor(rect.width * dpr),
+                        );
+                        this.canvas.height = Math.max(
+                            1,
+                            Math.floor(rect.height * dpr),
+                        );
+
+                        // 重新设置可视化大小
+                        if (this.waveInstance) {
+                            this.waveInstance.canvas = this.canvas;
+                        }
+                    },
+
+                    setupWave() {
+                        try {
+                            // 检查必要的元素是否存在
+                            if (!this.audio || !this.canvas) {
+                                console.warn(
+                                    'Audio or canvas element not ready',
+                                );
+                                return;
+                            }
+
+                            // 确保canvas上下文已正确设置
+                            const ctx = this.canvas.getContext('2d');
+                            if (!ctx) {
+                                throw new Error('无法获取canvas上下文');
+                            }
+
+                            // 如果已存在实例，先清理
+                            if (this.waveInstance) {
+                                // 清理现有动画
+                                if (this.waveInstance.animationFrames) {
+                                    this.waveInstance.animationFrames = [];
+                                }
+                            } else {
+                                // 创建新的Wave实例
+                                this.waveInstance = new Wave(
+                                    this.audio,
+                                    this.canvas,
+                                );
+                            }
+
+                            // 添加可视化动画
+                            if (
+                                this.waveInstance &&
+                                this.waveInstance.animations
+                            ) {
+                                // 清除之前的动画
+                                this.waveInstance.animationFrames = [];
+
+                                // 定义动画选项
+                                const animationsOptions = {
+                                    Lines: {
+                                        count: 64,
+                                        lineWidth: 2,
+                                        lineColor: {
+                                            gradient: ['#00ffd5', '#0077ff'],
+                                            rotate: 90,
+                                        },
+                                        frequencyBand: 'mids',
+                                    },
+                                    Wave: {
+                                        lineWidth: 3,
+                                        lineColor: {
+                                            gradient: ['#00ffd5', '#0077ff'],
+                                            rotate: 90,
+                                        },
+                                        frequencyBand: 'mids',
+                                    },
+                                    Bars: {
+                                        count: 64,
+                                        spacing: 2,
+                                        lineWidth: 2,
+                                        fillColor: {
+                                            gradient: ['#00ffd5', '#0077ff'],
+                                            rotate: 90,
+                                        },
+                                        lineColor: '#ffffff',
+                                        mirrored: true,
+                                    },
+                                    Cubes: {
+                                        count: 20,
+                                        gap: 5,
+                                        frequencyBand: 'mids',
+                                    },
+                                };
+
+                                // 尝试不同的动画类型，按优先级排序
+                                const animationPriority = [
+                                    'Lines',
+                                    'Wave',
+                                    'Cubes',
+                                    'Arcs',
+                                    'Circles',
+                                ];
+                                let selectedAnimation = null;
+
+                                for (const animType of animationPriority) {
+                                    if (
+                                        this.waveInstance.animations[animType]
+                                    ) {
+                                        selectedAnimation = animType;
+                                        break;
+                                    }
+                                }
+
+                                // 如果没有找到合适的动画类型，使用第一个可用的
+                                if (!selectedAnimation) {
+                                    const availableAnimations = Object.keys(
+                                        this.waveInstance.animations,
+                                    );
+                                    if (availableAnimations.length > 0) {
+                                        selectedAnimation =
+                                            availableAnimations[0];
+                                    }
+                                }
+
+                                // 添加选中的动画
+                                if (
+                                    selectedAnimation &&
+                                    this.waveInstance.animations[
+                                        selectedAnimation
+                                    ]
+                                ) {
+                                    const options =
+                                        animationsOptions[selectedAnimation] ||
+                                        {};
+                                    this.waveInstance.addAnimation(
+                                        new this.waveInstance.animations[
+                                            selectedAnimation
+                                        ](options),
+                                    );
+                                    console.log(
+                                        'Wave.js 初始化成功，使用动画类型:',
+                                        selectedAnimation,
+                                    );
+                                } else {
+                                    console.warn('没有找到可用的动画类型');
+                                }
+                            } else {
+                                throw new Error('Wave.js动画对象未正确初始化');
+                            }
+
+                            this.trackTitle = '准备就绪';
+                            this.hasError = false;
+                        } catch (err) {
+                            console.error('Wave.js 初始化失败', err);
+                            this.showError('可视化初始化失败: ' + err.message);
+                        }
+                    },
+
+                    async togglePlay() {
+                        if (!this.audio) return;
+                        this.loading = true;
+                        try {
+                            if (this.isPlaying) {
+                                this.audio.pause();
+                            } else {
+                                // 在播放前确保可视化已正确设置
+                                await this.audio.play();
+                            }
+                        } catch (err) {
+                            console.error('播放失败:', err);
+                            this.showError('无法播放音频: ' + err.message);
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+
+                    reloadStream() {
+                        try {
+                            const src = this.audio.src;
+                            this.audio.src = '';
+                            setTimeout(() => {
+                                this.audio.src = src;
+                                this.audio.load();
+                                this.trackTitle = '正在重连...';
+
+                                // 重新初始化可视化
+                                this.setupWave();
+
+                                this.audio.play().catch(() => {
+                                    this.trackTitle = '已重置，点击播放';
+                                });
+                            }, 200);
+                        } catch (err) {
+                            console.error('重连失败', err);
+                            this.showError('重连失败');
+                        }
+                    },
+
+                    setVolume() {
+                        if (this.audio) this.audio.volume = this.volume;
+                    },
+
+                    showError(msg) {
+                        this.trackTitle = msg;
+                        this.hasError = true;
+                    },
+                };
+            }
+        </script>
+    </body>
 </html>
