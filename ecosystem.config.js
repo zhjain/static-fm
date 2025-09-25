@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "static-fm",
-      script: "./server.js",
+      script: "./server/server.js",
       instances: 1,
       exec_mode: "fork",
       watch: false,
@@ -18,7 +18,8 @@ module.exports = {
     },
     {
       name: "radio",
-      script: "liquidsoap ./config/radio.liq",
+      script: "liquidsoap",
+      args: "./server/radio.liq",
       instances: 1,
       exec_mode: "fork",
       watch: false,

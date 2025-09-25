@@ -1,4 +1,4 @@
-settings.log.file.path.set("./logs/liquidsoap.log")
+settings.log.file.path.set("../logs/liquidsoap.log")
 settings.log.stdout.set(true)
 settings.log.level.set(3)
 
@@ -12,7 +12,7 @@ settings.decoder.file_extensions.flac.set(["flac"])
 settings.decoder.file_extensions.ogg.set(["ogg", "oga"])
 settings.decoder.file_extensions.wav.set(["wav"])
 
-playlist_file = "./playlists/current.m3u"
+playlist_file = "../playlists/current.m3u"
 
 def create_default_playlist() =
     if not file.exists(playlist_file) then
@@ -31,7 +31,7 @@ music_source = playlist(
 
 silence_source = blank(id="silense", duration=2.0)
 
-emergency_source = single(id="emergency", "./config/silence.mp3")
+emergency_source = single(id="emergency", "silence.mp3")
 
 radio_source = fallback(
     track_sensitive=false,
@@ -105,7 +105,10 @@ def on_track_start(m) =
     log("Now playing: #{!current_artist} - #{!current_title}")
 
     current_info = "#{!current_artist} - #{!current_title}"
-    file.write(data="#{current_info}", "./logs/current_track.txt")
+    
+    // 直接调用 Node.js 脚本发布到 Redis
+    ret = system("node #{process.quote("#{process.getenv("PWD", ".")}/../scripts/publish-track.js")} #{process.quote(current_info)}")
+    log("Publish script result: #{ret}")
 end
 
 
@@ -120,7 +123,7 @@ log("=== network radio starting ===")
 log("Icecast address: http://localhost:8900/radio")
 log("Telnet control: telnet localhost 1234")
 log("Playlist: #{playlist_file}")
-log("Log file: ./logs/liquidsoap.log")
+log("Log file: ../logs/liquidsoap.log")
 log("==============================")
 
 
