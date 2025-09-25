@@ -181,7 +181,7 @@ logs:
 
 # 后台运行服务（使用PM2，仅Node.js应用）
 .PHONY: daemon
-daemon: setup-directories icecast-systemctl-start
+daemon: setup-directories icecast-systemctl-restart
 	@echo "正在后台启动服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 start ecosystem.config.js; \
@@ -191,7 +191,7 @@ daemon: setup-directories icecast-systemctl-start
 
 # 停止后台运行的服务
 .PHONY: daemon-stop
-daemon-stop: liquidsoap-stop icecast-stop
+daemon-stop:
 	@echo "正在停止后台服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 stop ecosystem.config.js; \
@@ -289,6 +289,18 @@ icecast-systemctl-start:
 		echo "Icecast服务已通过systemctl启动"; \
 	else \
 		echo "未找到Icecast systemctl服务文件，使用传统方式启动"; \
+		make icecast-start; \
+	fi
+
+.PHONY: icecast-systemctl-restart
+icecast-systemctl-restart:
+	@echo "使用systemctl重启Icecast服务..."
+	@if systemctl list-unit-files | grep -q icecast; then \
+		sudo systemctl restart icecast2; \
+		echo "Icecast服务已通过systemctl重启"; \
+	else \
+		echo "未找到Icecast systemctl服务文件，使用传统方式重启"; \
+		make icecast-stop; \
 		make icecast-start; \
 	fi
 
