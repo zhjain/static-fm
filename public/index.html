@@ -1,433 +1,215 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网络电台</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>网络电台（Alpine + Wave.js 可视化）</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #333;
-        }
+  <!-- Alpine.js -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 40px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.1),
-                0 8px 25px rgba(0, 0, 0, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+  <!-- Wave.js (CDN from repo README) -->
+  <script src="https://cdn.jsdelivr.net/gh/foobar404/wave.js/dist/bundle.js" defer></script>
 
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 40px;
-            letter-spacing: -0.02em;
-        }
-
-        .player-section {
-            margin-bottom: 40px;
-        }
-
-        .track-display {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 16px;
-            padding: 30px 20px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .track-display::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .track-label {
-            font-size: 0.9rem;
-            color: #6c757d;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-
-        .track-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #2d3748;
-            line-height: 1.4;
-            min-height: 1.8rem;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .volume-icon {
-            width: 20px;
-            height: 20px;
-            fill: #6c757d;
-        }
-
-        #volume-slider {
-            -webkit-appearance: none;
-            width: 150px;
-            height: 6px;
-            border-radius: 3px;
-            background: linear-gradient(to right, #667eea 0%, #667eea var(--volume, 50%), #e2e8f0 var(--volume, 50%), #e2e8f0 100%);
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        #volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-        }
-
-        #volume-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .mute-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px 28px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mute-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .mute-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .mute-btn:hover::before {
-            left: 100%;
-        }
-
-        .mute-btn:active {
-            transform: translateY(0);
-        }
-
-        .mute-btn.muted {
-            background: linear-gradient(135deg, #e53e3e, #c53030);
-            box-shadow: 0 4px 14px rgba(229, 62, 62, 0.4);
-        }
-
-        .mute-btn.muted:hover {
-            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.5);
-        }
-
-        audio {
-            display: none;
-        }
-
-        .stats {
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 30px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .stats-content {
-            font-size: 0.9rem;
-            color: #4a5568;
-            font-weight: 500;
-        }
-
-        .loading-pulse {
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #48bb78;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: statusBlink 2s infinite;
-        }
-
-        @keyframes statusBlink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
-        }
-
-        .error-state {
-            color: #e53e3e;
-        }
-
-        .error-state .status-indicator {
-            background: #e53e3e;
-            animation: none;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .track-display {
-                padding: 20px 15px;
-            }
-
-            #volume-slider {
-                width: 120px;
-            }
-        }
-    </style>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      color:#fff;
+    }
+    .player {
+      width: 100%;
+      max-width: 760px;
+      background: rgba(255,255,255,0.06);
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      text-align:center;
+    }
+    canvas {
+      width: 100%;
+      height: 200px;
+      display:block;
+      border-radius:8px;
+      background: rgba(0,0,0,0.25);
+    }
+    .controls { margin-top: 12px; display:flex; gap:10px; align-items:center; justify-content:center; }
+    button { padding:8px 14px; border-radius:8px; border:none; cursor:pointer; background:#fff; color:#333; font-weight:600; }
+    .meta { margin-top:10px; font-size:14px; opacity:0.95; }
+    .error { color: #ffcccb; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>网络电台</h1>
-        
-        <div class="player-section">
-            <div class="track-display">
-                <div class="track-label">正在播放</div>
-                <div id="track-title" class="track-title loading-pulse">加载中...</div>
-            </div>
-            
-            <div class="controls">
-                <div class="volume-control">
-                    <svg class="volume-icon" viewBox="0 0 24 24">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm10.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM16 12c0-2.76-1.69-5.13-4.1-6.1l-.9.85C12.92 7.74 14 9.76 14 12s-1.08 4.26-2.9 5.25l.9.85C14.31 17.13 16 14.76 16 12z"/>
-                    </svg>
-                    <input type="range" id="volume-slider" min="0" max="100" value="50">
-                    <span id="volume-display">50%</span>
-                </div>
-                
-                <button id="mute-btn" class="mute-btn" onclick="toggleMute()">
-                    <span class="status-indicator"></span>静音
-                </button>
-            </div>
-            
-            <audio id="radio-audio" src="https://radio.startend.xyz/radio"></audio>
-        </div>
-        
-        <div class="stats">
-            <div id="stats-content" class="stats-content">
-                &copy; <span id="current-year"></span> 网络电台
-            </div>
-        </div>
-    </div>
+  <div class="player" x-data="radioPlayer()" x-init="init()">
+    <!-- Audio element -->
+    <audio x-ref="audio" id="radio-audio" src="https://radio.startend.xyz/radio" crossorigin="anonymous"></audio>
 
-    <script>
-        // 设置当前年份
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-        
-        // 获取元素
-        const audioElement = document.getElementById('radio-audio');
-        const muteButton = document.getElementById('mute-btn');
-        const volumeSlider = document.getElementById('volume-slider');
-        const volumeDisplay = document.getElementById('volume-display');
-        const trackTitle = document.getElementById('track-title');
-        const statsContent = document.getElementById('stats-content');
-        
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchRadioStatus();
-            setupVolumeControl();
-            audioElement.volume = 0.5;
-        });
-        
-        // 设置音量控制
-        function setupVolumeControl() {
-            volumeSlider.addEventListener('input', function() {
-                const volume = this.value / 100;
-                audioElement.volume = volume;
-                volumeDisplay.textContent = this.value + '%';
-                
-                // 更新滑块背景
-                this.style.setProperty('--volume', this.value + '%');
-                
-                // 自动更新静音状态
-                if (volume === 0) {
-                    audioElement.muted = true;
-                    updateMuteButton(true);
-                } else if (audioElement.muted) {
-                    audioElement.muted = false;
-                    updateMuteButton(false);
-                }
-            });
-            
-            // 初始化滑块样式
-            volumeSlider.style.setProperty('--volume', '50%');
-        }
-        
-        // 获取电台状态
-        function fetchRadioStatus() {
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updateRadioStatus(data.data);
-                        clearErrorState();
-                    } else {
-                        showError('获取电台状态失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showError('连接服务器失败');
-                });
-        }
-        
-        // 更新电台状态
-        function updateRadioStatus(data) {
-            // 更新当前播放信息
-            trackTitle.textContent = data.currentTrack || '暂无播放信息';
-            trackTitle.classList.remove('loading-pulse');
-            
-            // 更新统计信息
-            statsContent.innerHTML = `
-                &copy; ${new Date().getFullYear()} 网络电台 | 总曲目: ${data.totalTracks || 0}
-            `;
-        }
-        
-        // 切换静音状态
-        function toggleMute() {
-            const isMuted = !audioElement.muted;
-            audioElement.muted = isMuted;
-            updateMuteButton(isMuted);
-            
-            // 如果取消静音且音量为0，设置为50%
-            if (!isMuted && audioElement.volume === 0) {
-                audioElement.volume = 0.5;
-                volumeSlider.value = 50;
-                volumeDisplay.textContent = '50%';
-                volumeSlider.style.setProperty('--volume', '50%');
+    <!-- Canvas for visualization -->
+    <canvas x-ref="canvas" id="wave-canvas" aria-hidden="true"></canvas>
+
+    <!-- Track / status -->
+    <div class="meta" :class="{ 'error': hasError }" x-text="trackTitle"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button @click="togglePlay" :disabled="loading" x-text="isPlaying ? '暂停' : '播放'"></button>
+      <button @click="reloadStream" title="重新连接流">重连</button>
+      <div style="min-width:120px; text-align:left;">
+        音量: <input type="range" min="0" max="1" step="0.01" x-model.number="volume" @input="setVolume" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function radioPlayer() {
+      return {
+        audio: null,
+        canvas: null,
+        waveInstance: null, // Wave.js 实例
+        isPlaying: false,
+        hasError: false,
+        loading: false,
+        trackTitle: "加载中...",
+        volume: 0.5,
+
+        init() {
+          // 获取引用（Alpine 确保 defer 脚本加载完成）
+          this.audio = this.$refs.audio;
+          this.canvas = this.$refs.canvas;
+
+          // 设置音量
+          this.audio.volume = this.volume;
+
+          // 绑定 audio 事件以同步 UI 状态
+          this.audio.addEventListener('play', () => { this.isPlaying = true; this.hasError = false; });
+          this.audio.addEventListener('pause', () => { this.isPlaying = false; });
+          this.audio.addEventListener('error', (e) => {
+            console.error('Audio error', e);
+            this.showError('音频播放出错');
+          });
+          this.audio.addEventListener('ended', () => { this.isPlaying = false; });
+
+          // 等待 Wave.js 脚本可用后初始化可视化（bundle.js 是 defer，所以此处通常已经可用）
+          const tryInitWave = () => {
+            if (typeof Wave === 'undefined') {
+              // 如果还没加载好，稍后重试
+              setTimeout(tryInitWave, 200);
+              return;
             }
-        }
-        
-        // 更新静音按钮状态
-        function updateMuteButton(isMuted) {
-            if (isMuted) {
-                muteButton.textContent = '取消静音';
-                muteButton.classList.add('muted');
+            this.setupWave();
+          };
+          tryInitWave();
+
+          // 响应窗口尺寸变化，调整 canvas 实像素尺寸以避免模糊
+          window.addEventListener('resize', () => this.resizeCanvas());
+          this.resizeCanvas();
+
+          // 可选: 启动时不自动播放。若你想自动播放可把下面注释打开（注意浏览器自动播放策略）
+          // this.togglePlay();
+        },
+
+        resizeCanvas() {
+          // 设定 canvas 的内部像素大小（避免 CSS 缩放模糊）
+          const dpr = window.devicePixelRatio || 1;
+          const rect = this.canvas.getBoundingClientRect();
+          this.canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+          this.canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        },
+
+        setupWave() {
+          try {
+            // 通过 Wave.js 将 audio 元素与 canvas 绑定
+            // 使用全局的 Wave 构造器（来自 bundle.js）
+            this.waveInstance = new Wave(this.audio, this.canvas);
+
+            // 添加一个简单的线型波动画（Wave.js 自带动画类）
+            // 参数可调（lineWidth, lineColor, count 等）
+            this.waveInstance.addAnimation(new this.waveInstance.animations.Wave({
+              lineWidth: 2 * (window.devicePixelRatio || 1),
+              lineColor: { gradient: ['#00ffd5', '#0077ff'], rotate: 90 },
+              count: 20
+            }));
+
+            // 再加一个填充的 glob 类型动画作为叠加（可选）
+            this.waveInstance.addAnimation(new this.waveInstance.animations.Glob({
+              fillColor: { gradient: ['rgba(255,255,255,0.05)', 'rgba(0,0,0,0.0)'], rotate: 0 },
+              lineWidth: 1,
+              lineColor: "#ffffff",
+              amplitude: 0.8
+            }));
+
+            // 可根据需要添加更多 animations（Bars, Square 等）
+            // waveInstance 的动画会在 audio.play() 时自动运行动画
+
+            // 当 wave 初始化成功，显示提示
+            this.trackTitle = "准备就绪";
+            this.hasError = false;
+          } catch (err) {
+            console.error('Wave.js 初始化失败', err);
+            this.showError('可视化初始化失败');
+          }
+        },
+
+        async togglePlay() {
+          if (!this.audio) return;
+          this.loading = true;
+          try {
+            if (this.isPlaying) {
+              this.audio.pause();
+              this.isPlaying = false;
             } else {
-                muteButton.textContent = '静音';
-                muteButton.classList.remove('muted');
+              // 尝试播放流（注意浏览器自动播放策略，某些浏览器需用户与页面互动）
+              await this.audio.play();
+              this.isPlaying = true;
+              this.hasError = false;
             }
-            
-            // 更新状态指示器
-            const indicator = muteButton.querySelector('.status-indicator');
-            muteButton.innerHTML = `<span class="status-indicator"></span>${muteButton.textContent}`;
+          } catch (err) {
+            console.error('播放失败:', err);
+            this.showError('无法播放音频（请点击允许或检查资源）');
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        reloadStream() {
+          // 重新加载流（用于流断开后尝试重连）
+          try {
+            this.audio.pause();
+            // 通过重新设置 src + load 强制刷新流
+            const src = this.audio.src;
+            this.audio.src = '';
+            // small timeout to ensure reset
+            setTimeout(() => {
+              this.audio.src = src;
+              this.audio.load();
+              this.trackTitle = '正在重连...';
+              // 尝试自动播放（如果浏览器允许）
+              this.audio.play().catch(() => {
+                this.trackTitle = '已重置，点击播放';
+              });
+            }, 200);
+          } catch (err) {
+            console.error('重连失败', err);
+            this.showError('重连失败');
+          }
+        },
+
+        setVolume() {
+          if (this.audio) this.audio.volume = this.volume;
+        },
+
+        showError(msg) {
+          this.trackTitle = msg;
+          this.hasError = true;
         }
-        
-        // 显示错误状态
-        function showError(message) {
-            trackTitle.textContent = message;
-            trackTitle.classList.remove('loading-pulse');
-            trackTitle.classList.add('error-state');
-            
-            // 更新按钮状态
-            muteButton.classList.add('error-state');
-        }
-        
-        // 清除错误状态
-        function clearErrorState() {
-            trackTitle.classList.remove('error-state');
-            muteButton.classList.remove('error-state');
-        }
-        
-        // 定时刷新数据
-        setInterval(fetchRadioStatus, 30000);
-    </script>
+      };
+    }
+  </script>
 </body>
 </html>

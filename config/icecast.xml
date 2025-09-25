@@ -26,13 +26,6 @@
         <port>8900</port>
     </listen-socket>
 
-    <!-- Update CORS headers to only allow GET method -->
-    <http-headers>
-        <header name="Access-Control-Allow-Origin" value="*" />
-        <header name="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type, Authorization, Cache-Control, Pragma" />
-        <header name="Access-Control-Allow-Methods" value="GET, OPTIONS, HEAD" />
-    </http-headers>
-
     <mount type="normal">
         <mount-name>/radio</mount-name>
         <password>radio123</password>
