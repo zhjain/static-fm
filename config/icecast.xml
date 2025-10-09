@@ -30,7 +30,7 @@
         <mount-name>/radio</mount-name>
         <password>radio123</password>
         <max-listeners>100</max-listeners>
-        <dump-file>/tmp/dump-radio.ogg</dump-file>
+        <!-- <dump-file>/tmp/dump-radio.ogg</dump-file> -->
         <burst-size>65536</burst-size>
         <fallback-mount>/silence.mp3</fallback-mount>
         <fallback-override>1</fallback-override>
