@@ -195,6 +195,8 @@ daemon-stop:
 	@echo "正在停止后台服务..."
 	@if command -v pm2 &> /dev/null; then \
 		pm2 stop ecosystem.config.js; \
+		pm2 delete ecosystem.config.js; \
+		echo "PM2任务已停止并删除"; \
 	else \
 		echo "PM2未安装"; \
 	fi
