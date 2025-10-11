@@ -222,7 +222,7 @@
                 
                 formData.append('song', file);
                 
-                fetch('/api/upload', {
+                fetch('/admin/upload', {
                     method: 'POST',
                     body: formData
                 })
@@ -244,7 +244,7 @@
             
             // 重新扫描按钮
             rescanBtn.addEventListener('click', function() {
-                fetch('/api/control/rescan', {
+                fetch('/admin/api/control/rescan', {
                     method: 'POST'
                 })
                 .then(response => response.json())
@@ -260,7 +260,7 @@
             
             // 下一首按钮
             nextBtn.addEventListener('click', function() {
-                fetch('/api/control/next', {
+                fetch('/admin/api/control/next', {
                     method: 'POST'
                 })
                 .then(response => response.json())
@@ -275,19 +275,19 @@
             
             // 加载歌曲列表
             function loadSongs() {
-                fetch('/api/songs')
+                fetch('/admin/api/playlist')
                 .then(response => response.json())
                 .then(songs => {
                     songsTableBody.innerHTML = '';
                     
-                    songs.forEach(song => {
+                    songs.data.forEach(song => {
                         const row = document.createElement('tr');
                         
                         const nameCell = document.createElement('td');
-                        nameCell.textContent = song.originalname;
+                        nameCell.textContent = song.name || song.title || '未知歌曲';
                         
                         const timeCell = document.createElement('td');
-                        timeCell.textContent = new Date(song.uploadTime).toLocaleString();
+                        timeCell.textContent = new Date(song.addedAt).toLocaleString();
                         
                         const actionCell = document.createElement('td');
                         const deleteBtn = document.createElement('button');
@@ -316,7 +316,7 @@
                     return;
                 }
                 
-                fetch(`/api/songs/${songId}`, {
+                fetch(`/admin/api/playlist/${songId}`, {
                     method: 'DELETE'
                 })
                 .then(response => response.json())
@@ -336,16 +336,16 @@
             
             // 定期获取当前播放状态
             function updateStatus() {
-                fetch('/api/status')
+                fetch('/admin/api/status')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.currentSong) {
-                        currentSongEl.textContent = data.currentSong.originalname || '未知歌曲';
+                    if (data.data) {
+                        currentSongEl.textContent = data.data.currentTrack || '暂无信息';
                     } else {
                         currentSongEl.textContent = '暂无信息';
                     }
                     
-                    playerStatusEl.textContent = data.isPlaying ? '正在播放' : '未播放';
+                    playerStatusEl.textContent = data.data && data.data.liquidsoap && data.data.icecast ? '正在播放' : '未播放';
                 })
                 .catch(error => {
                     console.error('获取状态失败:', error);
