@@ -4,8 +4,12 @@
 NODE_BIN = ./node_modules/.bin
 NODE_ENV = development
 PORT = 3000
-ICECAST_CONFIG = ./config/icecast.xml
 LIQUIDSOAP_CONFIG = ./config/radio.liq
+
+# ============ 配置 Icecast ============
+ICECAST_TEMPLATE = ./config/icecast.xml.template
+ICECAST_CONFIG = ./config/icecast.xml
+ICECAST_TARGET = /usr/local/etc/icecast.xml
 
 # 默认目标
 .PHONY: help
@@ -98,14 +102,30 @@ install-all: install install-icecast install-liquidsoap
 
 # 配置Icecast
 .PHONY: configure-icecast
-configure-icecast:
-	@echo "正在复制Icecast配置文件到/etc目录..."
+configure-icecast: .env
+	@echo "=== 生成 Icecast 配置文件 ==="
+	@if [ ! -f $(ICECAST_TEMPLATE) ]; then \
+		echo "错误: 未找到模板文件 $(ICECAST_TEMPLATE)"; \
+		exit 1; \
+	fi
+
+	# 1. 从 .env 导出变量（仅用于 envsubst）
+	@set -a && \
+	. ./.env && \
+	set +a && \
+	envsubst < $(ICECAST_TEMPLATE) > $(ICECAST_CONFIG)
+
+	@echo "Icecast 配置文件已生成: $(ICECAST_CONFIG)"
+
+	@echo "正在复制到系统目录..."
 	@if [ -f $(ICECAST_CONFIG) ]; then \
-		sudo cp $(ICECAST_CONFIG)  /usr/local/etc/icecast.xml; \
-		sudo chown icecast2:icecast  /usr/local/etc/icecast.xml; \
-		echo "Icecast配置文件已复制到 /usr/local/etc/icecast.xml"; \
+		sudo cp $(ICECAST_CONFIG) $(ICECAST_TARGET); \
+		sudo chown icecast2:icecast $(ICECAST_TARGET); \
+		sudo chmod 644 $(ICECAST_TARGET); \
+		echo "Icecast 配置已部署到 $(ICECAST_TARGET)"; \
 	else \
-		echo "未找到Icecast配置文件: $(ICECAST_CONFIG)"; \
+		echo "错误: 生成配置文件失败"; \
+		exit 1; \
 	fi
 
 # 创建Liquidsoap所需的目录

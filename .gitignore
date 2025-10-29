@@ -3,3 +3,5 @@ data/
 music/
 logs/
 playlists/
+
+.env
