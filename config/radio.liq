@@ -128,7 +128,11 @@ def on_track_start(m) =
     # --- 发布到 API ---
     api_host = getenv(default="localhost", "LIQ_API_HOST")
     api_port = getenv(default="3000", "LIQ_API_PORT")
-    system("curl -s -X POST http://#{api_host}:#{api_port}/publish -d 'artist=#{!current_artist}&title=#{!current_title}'")
+    h = http.post(
+        "http://#{api_host}:#{api_port}/publish",
+        data="artist=#{!current_artist}&title=#{!current_title}",
+        headers=[("Content-Type", "application/x-www-form-urlencoded")]
+    )
 end
 
 
