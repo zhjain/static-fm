@@ -129,9 +129,9 @@ def on_track_start(m) =
     api_host = getenv(default="localhost", "LIQ_API_HOST")
     api_port = getenv(default="3000", "LIQ_API_PORT")
     h = http.post(
-        "http://#{api_host}:#{api_port}/publish",
         data="artist=#{!current_artist}&title=#{!current_title}",
-        headers=[("Content-Type", "application/x-www-form-urlencoded")]
+        headers=[("Content-Type", "application/x-www-form-urlencoded")],
+        "http://#{api_host}:#{api_port}/publish",
     )
 end
 
