@@ -232,9 +232,9 @@ app.get('/', async (req, res) => {
 });
 
 // 发布接口（Liquidsoap 调用）
-app.post('/publish', (req, res) => {
+app.post('/publish', async (req, res) => {
     const { artist = '', title = '' } = req.body;
-    redisClient.publishTrack({ artist, title });
+    await redisClient.publishTrack({ artist, title });
     res.sendStatus(200);
 });
 
@@ -242,18 +242,23 @@ app.post('/publish', (req, res) => {
 app.get('/current', (req, res) => res.json(redisClient.getCurrent()));
 
 // SSE 实时流（网页）
-app.get('/current/stream', (req, res) => {
+app.get('/current/stream', async (req, res) => {
+    const sub = await redisClient.createSubscriber(); // 👈 创建独立订阅连接
+
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
     });
     res.write(`data: ${JSON.stringify(redisClient.getCurrent())}\n\n`);
-    // 订阅 Redis 频道，实时转发
-    const listener = (_, msg) => res.write(`data: ${msg}\n\n`);
-    redisClient.sub.on('message', listener);
-    req.on('close', () => {
-        redisClient.sub.removeListener('message', listener);
+
+    await sub.subscribe(redisClient.channel, (msg) => {
+        res.write(`data: ${msg}\n\n`);
+    });
+
+    req.on('close', async () => {
+        await sub.unsubscribe(redisClient.channel);
+        await sub.quit();
         res.end();
     });
 });
