@@ -1,3 +1,11 @@
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+
+// 读取 .env 文件
+const envFile = path.resolve(__dirname, '.env');
+const envConfig = dotenv.parse(fs.readFileSync(envFile));
+
 module.exports = {
   apps: [
     {
@@ -23,7 +31,7 @@ module.exports = {
       exec_mode: "fork",
       watch: false,
       max_memory_restart: "1G",
-      env_file: ".env",
+      env: envConfig ,
     }
   ],
 };
