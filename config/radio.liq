@@ -3,13 +3,13 @@
 # ==============================
 
 # --- 日志 ---
-log_file = get_process_env("LIQ_LOG_FILE", "./logs/liquidsoap.log")
+log_file = getenv(default="./logs/liquidsoap.log", "LIQ_LOG_FILE")
 settings.log.file.path.set(log_file)
 settings.log.stdout.set(true)
 settings.log.level.set(3)
 
 # --- Telnet ---
-telnet_port = int_of_string(get_process_env("LIQ_TELNET_PORT", "1234"))
+telnet_port = int_of_string(getenv(default="1234", "LIQ_TELNET_PORT"))
 settings.server.telnet.set(true)
 settings.server.telnet.bind_addr.set("127.0.0.1")
 settings.server.telnet.port.set(telnet_port)
@@ -22,7 +22,7 @@ settings.decoder.file_extensions.ogg.set(["ogg", "oga"])
 settings.decoder.file_extensions.wav.set(["wav"])
 
 # --- 播放列表 ---
-playlist_file = get_process_env("LIQ_PLAYLIST_FILE", "./playlists/current.m3u")
+playlist_file = getenv(default="./playlists/current.m3u", "LIQ_PLAYLIST_FILE")
 
 def create_default_playlist() =
     if not file.exists(playlist_file) then
@@ -78,10 +78,10 @@ radio_source = compress(
 )
 
 # --- Icecast 输出 ---
-icecast_host = get_process_env("ICECAST_HOST", "localhost")
-icecast_port = int_of_string(get_process_env("ICECAST_PORT", "8900"))
-icecast_password = get_process_env("ICECAST_PASSWORD", "radio123")
-icecast_mount = get_process_env("ICECAST_MOUNT", "/radio")
+icecast_host = getenv(default="localhost", "ICECAST_HOST")
+icecast_port = int_of_string(getenv(default="8900", "ICECAST_PORT"))
+icecast_password = getenv(default="radio123", "ICECAST_PASSWORD")
+icecast_mount = getenv(default="/radio", "ICECAST_MOUNT")
 
 output.icecast(
     %mp3(bitrate=128, samplerate=44100, stereo=true),
@@ -90,10 +90,10 @@ output.icecast(
     port=icecast_port,
     password=icecast_password,
     mount=icecast_mount,
-    name=get_process_env("ICECAST_NAME", "Static.FM"),
-    description=get_process_env("ICECAST_DESCRIPTION", "24 hours no stop"),
-    url=get_process_env("ICECAST_URL", "http://localhost:8900"),
-    genre=get_process_env("ICECAST_GENRE", "Various"),
+    name=getenv(default="Static.FM", "ICECAST_NAME"),
+    description=getenv(default="24 hours no stop", "ICECAST_DESCRIPTION"),
+    url=getenv(default="http://localhost:8900", "ICECAST_URL"),
+    genre=getenv(default="Various", "ICECAST_GENRE"),
     encoding="utf-8",
     radio_source
 )
@@ -125,8 +125,8 @@ def on_track_start(m) =
     file.write(data="#{current_info}", "./logs/current_track.txt")
 
     # --- 发布到 API ---
-    api_host = get_process_env("LIQ_API_HOST", "localhost")
-    api_port = get_process_env("LIQ_API_PORT", "3000")
+    api_host = getenv(default="localhost", "LIQ_API_HOST")
+    api_port = getenv(default="3000", "LIQ_API_PORT")
     system("curl -s -X POST http://#{api_host}:#{api_port}/publish -d 'artist=#{!current_artist}&title=#{!current_title}'")
 end
 
