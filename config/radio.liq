@@ -41,7 +41,8 @@ music_source = playlist(
 
 silence_source = blank(id="silense", duration=2.0)
 
-emergency_source = single(id="emergency", "./config/silence.mp3")
+silence_file = getenv(default="./config/silence.mp3", "LIQ_SILENCE_FILE")
+emergency_source = single(id="emergency", silence_file)
 
 radio_source = fallback(
     track_sensitive=false,
@@ -80,8 +81,8 @@ radio_source = compress(
 # --- Icecast 输出 ---
 icecast_host = getenv(default="localhost", "ICECAST_HOST")
 icecast_port = int_of_string(getenv(default="8900", "ICECAST_PORT"))
-icecast_password = getenv(default="radio123", "ICECAST_PASSWORD")
-icecast_mount = getenv(default="/radio", "ICECAST_MOUNT")
+icecast_password = getenv(default="radio123", "ICECAST_MOUNT_PASSWORD")
+icecast_mount = getenv(default="/radio", "ICECAST_MOUNT_NAME")
 
 output.icecast(
     %mp3(bitrate=128, samplerate=44100, stereo=true),
@@ -90,9 +91,9 @@ output.icecast(
     port=icecast_port,
     password=icecast_password,
     mount=icecast_mount,
-    name=getenv(default="Static.FM", "ICECAST_NAME"),
-    description=getenv(default="24 hours no stop", "ICECAST_DESCRIPTION"),
-    url=getenv(default="http://localhost:8900", "ICECAST_URL"),
+    name=getenv(default="Static.FM", "ICECAST_STREAM_NAME"),
+    description=getenv(default="24 hours no stop", "ICECAST_STREAM_DESCRIPTION"),
+    url=getenv(default="http://localhost:8900", "ICECAST_STREAM_URL"),
     genre=getenv(default="Various", "ICECAST_GENRE"),
     encoding="utf-8",
     radio_source
