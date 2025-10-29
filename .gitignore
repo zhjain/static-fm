@@ -5,3 +5,4 @@ logs/
 playlists/
 
 .env
+config/icecast.xml
