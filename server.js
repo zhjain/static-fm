@@ -711,6 +711,8 @@ app.use((req, res) => {
     });
 });
 
+redisClient.init();
+
 app.listen(PORT, '0.0.0.0', () => {
     logger.info(`服务器运行在 http://localhost:${PORT}`);
     logger.info('电台管理系统已启动');
