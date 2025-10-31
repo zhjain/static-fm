@@ -1,10 +1,13 @@
 <!doctype html>
-<html class="dark" lang="zh-CN">
+<html lang="zh-CN">
     <head>
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1.0" name="viewport" />
         <title>static.fm - Minimalist Web Radio</title>
-        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        
+        <!-- 引入自定义CSS文件 -->
+        <link href="./css/style.css" rel="stylesheet" />
+        
         <link href="https://fonts.googleapis.com" rel="preconnect" />
         <link
             crossorigin=""
@@ -16,42 +19,8 @@
         <link
             href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
             rel="stylesheet" />
-        <script id="tailwind-config">
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: '#8A2BE2',
-                            'background-light': '#f6f7f8',
-                            'background-dark': '#1A103D',
-                            'primary-text': '#E0D7FF',
-                            'secondary-text': '#A39FC5',
-                            'accent-purple': '#A855F7',
-                            'accent-blue': '#3B82F6',
-                        },
-                        fontFamily: {
-                            display: [
-                                'Plus Jakarta Sans',
-                                'Noto Sans',
-                                'sans-serif',
-                            ],
-                        },
-                        borderRadius: {
-                            DEFAULT: '0.25rem',
-                            lg: '0.5rem',
-                            xl: '0.75rem',
-                            full: '9999px',
-                        },
-                    },
-                },
-            };
-        </script>
-        <style type="text/tailwindcss">
-            body {
-                @apply font-display;
-            }
-
+        
+        <style>
             .material-symbols-outlined {
                 font-variation-settings:
                     'FILL' 0,
@@ -60,6 +29,7 @@
                     'opsz' 24;
             }
         </style>
+        
         <!-- Alpine.js -->
         <script
             src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
@@ -67,115 +37,78 @@
 
         <!-- Wave.js (使用npm包的CDN链接) -->
         <script src="https://cdn.jsdelivr.net/npm/@foobar404/wave@2.0.5/dist/bundle.js"></script>
-        <style>
-            canvas {
-                width: 100%;
-                height: 100%;
-                display: block;
-                border-radius: 8px;
-                background: rgba(0, 0, 0, 0.25);
-            }
-
-            .hidden {
-                display: none;
-            }
-
-            #radio-audio {
-                display: none;
-            }
-        </style>
     </head>
 
-    <body
-        class="bg-background-light dark:bg-background-dark"
-        x-data="radioPlayer()">
+    <body x-data="radioPlayer()">
         <!-- Audio element -->
         <audio
             id="radio-audio"
             src="https://radio.startend.xyz/radio"
             crossorigin="anonymous"></audio>
 
-        <div
-            class="group/design-root relative flex h-auto min-h-screen w-full flex-col overflow-hidden">
-            <div class="layout-container flex h-full grow flex-col">
-                <div class="absolute top-0 left-0 w-full p-6 sm:p-8 md:p-10">
-                    <h3
-                        class="text-secondary-text tracking-light text-left text-2xl leading-tight font-bold">
-                        static.fm
-                    </h3>
-                </div>
-                <main
-                    class="flex flex-1 flex-col items-center justify-center px-4 py-20 sm:px-6 lg:px-8">
-                    <div class="flex w-full max-w-4xl flex-col items-center">
-                        <div
-                            class="@container flex w-full grow justify-center py-3">
-                            <div
-                                class="flex aspect-[16/9] w-full max-w-2xl gap-1 overflow-hidden @[480px]:gap-2">
-                                <div
-                                    class="flex aspect-auto w-full flex-1 items-center justify-center bg-cover bg-center bg-no-repeat"
-                                    data-alt="Abstract audio visualization with pulsing blue and purple lines on a dark background">
-                                    <!-- Audio Visualization Canvas -->
-                                    <canvas
-                                        id="wave-canvas"
-                                        class="h-full w-full rounded-lg"></canvas>
-                                </div>
+        <div class="layout-container">
+            <div class="header">
+                <h3>static.fm</h3>
+            </div>
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="visualization-container">
+                        <div class="visualization-wrapper">
+                            <div class="visualization-content"
+                                data-alt="Abstract audio visualization with pulsing blue and purple lines on a dark background">
+                                <!-- Audio Visualization Canvas -->
+                                <canvas
+                                    id="wave-canvas"
+                                    class="wave-canvas"></canvas>
                             </div>
-                        </div>
-                        <div
-                            class="layout-content-container flex w-full flex-1 flex-col pt-6">
-                            <h1
-                                class="text-primary-text tracking-light pt-6 pb-1 text-center text-[32px] leading-tight font-bold"
-                                x-text="trackTitle">
-                                加载中...
-                            </h1>
-                            <p
-                                class="text-primary-text pb-3 text-center text-base leading-normal font-normal"
-                                x-show="artist"
-                                x-text="artist">
-                                未知艺术家
-                            </p>
-                        </div>
-                        <div
-                            class="layout-content-container flex w-full flex-1 flex-col pt-8">
-                            <p
-                                class="text-secondary-text pt-1 pb-2 text-center text-sm leading-normal font-normal">
-                                控制面板:
-                            </p>
-                            <div class="flex justify-center space-x-4 pt-4">
-                                <button
-                                    @click="togglePlay"
-                                    :disabled="loading"
-                                    class="bg-primary rounded-lg px-6 py-3 font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-50"
-                                    x-text="isPlaying ? '暂停' : '播放'"></button>
-                                <button
-                                    @click="reloadStream"
-                                    title="重新连接流"
-                                    class="bg-accent-blue rounded-lg px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700">
-                                    重连
-                                </button>
-                            </div>
-                            <div class="w-full max-w-md pt-6">
-                                <label
-                                    class="text-secondary-text mb-2 block text-sm font-medium"
-                                    >音量:</label
-                                >
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    x-model.number="volume"
-                                    @input="setVolume"
-                                    class="accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700" />
-                            </div>
-                            <div
-                                class="pt-4 text-center"
-                                :class="{ 'text-red-400': hasError }"
-                                x-text="statusMessage"></div>
                         </div>
                     </div>
-                </main>
+                    <div class="title-container">
+                        <h1 class="track-title" x-text="trackTitle">
+                            加载中...
+                        </h1>
+                        <p class="artist"
+                            x-show="artist"
+                            x-text="artist">
+                            未知艺术家
+                        </p>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- 悬浮控制按钮 -->
+            <div class="floating-controls">
+                <button
+                    @click="reloadStream"
+                    title="重新连接流"
+                    class="reload-button">
+                    <span class="material-symbols-outlined reload-icon">refresh</span>
+                </button>
+                <button
+                    @click="togglePlay"
+                    :disabled="loading"
+                    class="play-button"
+                    x-text="isPlaying ? '⏸' : '▶'">
+                    <span class="material-symbols-outlined play-icon" x-show="isPlaying">pause</span>
+                    <span class="material-symbols-outlined play-icon" x-show="!isPlaying">play_arrow</span>
+                </button>
+                <div class="volume-container">
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        x-model.number="volume"
+                        @input="setVolume"
+                        class="volume-slider" />
+                </div>
             </div>
+            
+            <!-- 状态消息 -->
+            <div
+                class="status-message"
+                :class="{ 'error': hasError }"
+                x-text="statusMessage"></div>
         </div>
 
         <!-- 引入外部JavaScript文件 -->

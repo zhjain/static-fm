@@ -1,0 +1,326 @@
+/* 定义颜色变量 - 优雅的蓝紫色调 */
+:root {
+  --primary: #6A5ACD; /* 优雅的蓝紫色 */
+  --background: #1C153D; /* 蓝紫色深背景 */
+  --primary-text: #F0F0F0; /* 主要文字颜色 */
+  --secondary-text: #A0AEC0; /* 次要文字颜色 */
+  --accent-purple: #9370DB; /* 中等蓝紫色 */
+  --accent-blue: #7B68EE; /* 中等蓝色 */
+  --font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
+}
+
+/* 基础样式 */
+body {
+  font-family: var(--font-family);
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--primary-text);
+  min-height: 100vh;
+  overflow: hidden; /* 移除全局滚动条 */
+}
+
+/* 隐藏音频元素 */
+#radio-audio {
+  display: none;
+}
+
+/* 音频可视化画布 */
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 隐藏元素 */
+.hidden {
+  display: none;
+}
+
+/* 布局容器 */
+.layout-container {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 头部样式 */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .header {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding: 2.5rem;
+  }
+}
+
+.header h3 {
+  color: var(--secondary-text);
+  text-align: left;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* 主要内容区域 */
+.main-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.content-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 音频可视化区域 */
+.visualization-container {
+  display: flex;
+  width: 100%;
+  height: 70%;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.visualization-wrapper {
+  display: flex;
+  width: 90%;
+  height: 100%;
+  max-width: 800px;
+  max-height: 500px;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.visualization-content {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.wave-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+}
+
+/* 标题区域 */
+.title-container {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0 1rem;
+  width: 100%;
+  height: 30%;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.track-title {
+  color: var(--primary-text);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: bold;
+  margin: 0.5rem 0;
+  padding: 0;
+  max-width: 90%;
+  word-wrap: break-word;
+}
+
+.artist {
+  color: var(--secondary-text);
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: normal;
+  margin: 0.25rem 0;
+  padding: 0;
+  max-width: 90%;
+  word-wrap: break-word;
+}
+
+/* 悬浮播放按钮 */
+.floating-controls {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+}
+
+.play-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.play-button:hover {
+  transform: scale(1.05);
+  background-color: #5a4db3;
+}
+
+.play-button:disabled {
+  opacity: 0.5;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.play-icon {
+  color: white;
+  font-size: 24px;
+}
+
+.reload-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--accent-blue);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.reload-button:hover {
+  transform: scale(1.05);
+  background-color: #6a5acd;
+}
+
+.reload-icon {
+  color: white;
+  font-size: 18px;
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.volume-slider {
+  width: 100px;
+  height: 0.3rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  background-color: #374151;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  cursor: pointer;
+}
+
+.status-message {
+  position: fixed;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  z-index: 50;
+}
+
+.status-message.error {
+  color: #f87171;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .visualization-container {
+    height: 65%;
+  }
+  
+  .title-container {
+    height: 35%;
+    margin-top: 0.5rem;
+  }
+  
+  .visualization-wrapper {
+    width: 95%;
+    height: 100%;
+  }
+  
+  .track-title {
+    font-size: 1.25rem;
+    margin: 0.25rem 0;
+  }
+  
+  .artist {
+    font-size: 0.875rem;
+    margin: 0.1rem 0;
+  }
+  
+  .floating-controls {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+  
+  .play-button {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .play-icon {
+    font-size: 20px;
+  }
+  
+  .volume-slider {
+    width: 80px;
+  }
+}
