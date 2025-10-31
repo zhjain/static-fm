@@ -11,13 +11,18 @@ const redisClient = require('./redis/redisClient');
 const logger = require('./utils/logger');
 
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
+
+// 添加静态文件服务中间件
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 首页路由
+app.get('/', async (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // 日志中间件
 app.use(pinoHttp);
-
-// 静态文件
-// app.use(express.static(path.join(__dirname, 'public')));
 
 // 中间件
 app.use(express.json());
@@ -225,11 +230,6 @@ function getSystemStatus() {
 // ====================
 // 公共路由 (无前缀)
 // ====================
-
-// 首页路由
-app.get('/', async (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // 发布接口（Liquidsoap 调用）
 app.post('/publish', async (req, res) => {
@@ -718,8 +718,8 @@ app.use((req, res) => {
 
 redisClient.init();
 
-app.listen(PORT, '0.0.0.0', () => {
-    logger.info(`服务器运行在 http://localhost:${PORT}`);
+app.listen(port, '0.0.0.0', () => {
+    logger.info(`服务器运行在 http://localhost:${port}`);
     logger.info('电台管理系统已启动');
 });
 
