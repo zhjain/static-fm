@@ -1,0 +1,226 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: #1c153d;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: #f0f0f0;
+    overflow: auto !important; /* 强制允许滚动 */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: #2d245a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    margin: 0;
+    color: #9370db;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    background: #6a5acd;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #7b68ee;
+}
+
+.upload-section {
+    background: #2d245a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+input[type='file'] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #6a5acd;
+    border-radius: 5px;
+    background: #1c153d;
+    color: #f0f0f0;
+}
+
+.songs-list {
+    background: #2d245a;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #6a5acd;
+}
+
+th {
+    background-color: #3d327d;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+tr:hover {
+    background-color: #3d327d;
+}
+
+.delete-btn {
+    background: #e53e3e;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+}
+
+.delete-btn:hover {
+    background: #c53030;
+}
+
+.status-bar {
+    background: #2d245a;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.status-item {
+    display: inline-block;
+    margin-right: 20px;
+    color: #f0f0f0;
+}
+
+.file-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #3d327d;
+    border-radius: 5px;
+    border: 1px solid #6a5acd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.file-preview h4 {
+    margin-top: 0;
+    color: #f0f0f0;
+}
+
+.file-preview ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.file-preview li {
+    padding: 8px 0;
+    border-bottom: 1px solid #6a5acd;
+    color: #f0f0f0;
+    font-family: 'Courier New', monospace;
+}
+
+.file-preview li:last-child {
+    border-bottom: none;
+}
+
+.upload-status {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #3d327d;
+    border-radius: 5px;
+    border: 1px solid #6a5acd;
+    color: #9370db;
+}
+
+.upload-result {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e8f5e9;
+    border-radius: 5px;
+    border: 1px solid #c8e6c9;
+}
+
+/* 添加自定义滚动条样式 */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1c153d;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #6a5acd;
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #7b68ee;
+}
+
+/* 确保容器可以滚动 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    overflow: visible; /* 确保容器不会阻止滚动 */
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 8px;
+    }
+}

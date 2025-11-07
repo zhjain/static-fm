@@ -9,6 +9,7 @@ const { parseFile } = require('music-metadata');
 const pinoHttp = require('./middleware/pino');
 const redisClient = require('./redis/redisClient');
 const logger = require('./utils/logger');
+const basicAuth = require('./middleware/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -23,6 +24,9 @@ app.get('/', async (req, res) => {
 
 // 日志中间件
 app.use(pinoHttp);
+
+// 认证中间件
+app.use(basicAuth);
 
 // 中间件
 app.use(express.json());
@@ -58,6 +62,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
+        // 允许所有音频类型，因为浏览器可能发送不同的MIME类型
         const allowedTypes = [
             'audio/mpeg',
             'audio/mp3',
@@ -67,15 +72,26 @@ const upload = multer({
             'audio/m4a',
             'audio/aac',
             'audio/x-m4a',
+            'audio/x-wav',
+            'audio/x-flac',
+            'audio/x-aac'
         ];
 
         const ext = path.extname(file.originalname).toLowerCase();
         const allowedExts = ['.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aac'];
 
+        // 检查文件扩展名或MIME类型
         if (allowedTypes.includes(file.mimetype) || allowedExts.includes(ext)) {
             cb(null, true);
         } else {
-            cb(new Error('不支持的音频格式'), false);
+            // 对于未知类型，我们记录日志但仍然允许上传
+            console.warn(`未知的音频格式: ${file.mimetype}, 文件名: ${file.originalname}`);
+            // 临时放宽限制，允许所有音频文件上传
+            if (file.mimetype.startsWith('audio/')) {
+                cb(null, true);
+            } else {
+                cb(new Error('不支持的音频格式'), false);
+            }
         }
     },
     limits: {
@@ -363,76 +379,93 @@ app.get('/admin', async (req, res) => {
 });
 
 // 上传音频文件
-app.post('/admin/upload', upload.single('song'), async (req, res) => {
+app.post('/admin/upload', upload.array('songs'), async (req, res) => {
     try {
-        if (!req.file) {
+        if (!req.files || req.files.length === 0) {
             return res.status(400).json({
                 success: false,
                 message: '请选择音频文件',
             });
         }
 
-        const { title, artist } = req.body;
-        const originalName = Buffer.from(
-            req.file.originalname,
-            'latin1',
-        ).toString('utf8');
+        const uploadedTracks = [];
+        
+        // 处理每个上传的文件
+        for (const file of req.files) {
+            try {
+                const originalName = Buffer.from(
+                    file.originalname,
+                    'latin1',
+                ).toString('utf8');
 
-        // 生成目标文件名
-        const ext = path.extname(originalName);
-        const displayName = title || path.basename(originalName, ext);
-        const targetName = `${displayName}${ext}`;
+                // 解析音频元数据
+                let metadata;
+                try {
+                    metadata = await parseFile(file.path);
+                } catch (metaError) {
+                    logger.warn({ err: metaError }, '无法解析音频元数据');
+                    metadata = {
+                        common: {
+                            title: path.basename(originalName, path.extname(originalName)),
+                            artist: '',
+                            album: '',
+                            year: '',
+                            genre: '',
+                        },
+                    };
+                }
 
-        // 移动文件到音乐目录
-        const finalPath = await moveToMusicDir(req.file, targetName);
+                // 移动文件到音乐目录
+                const ext = path.extname(originalName);
+                const baseName = path.basename(originalName, ext);
+                const timestamp = Date.now();
+                const targetName = `${baseName}_${timestamp}${ext}`;
+                const finalPath = await moveToMusicDir(file, targetName);
 
-        // 尝试获取音频元数据
-        let duration = 0;
-        let metadata = {};
+                // 获取音频时长
+                let duration = 0;
+                if (metadata.format && metadata.format.duration) {
+                    duration = Math.round(metadata.format.duration);
+                }
 
-        try {
-            const audioMetadata = await parseFile(finalPath);
-            duration = Math.round(audioMetadata.format.duration || 0);
-            metadata = {
-                title: audioMetadata.common.title || displayName,
-                artist: audioMetadata.common.artist || artist || 'Unknown',
-                album: audioMetadata.common.album || '',
-                year: audioMetadata.common.year || '',
-                genre: audioMetadata.common.genre?.[0] || '',
-            };
-        } catch (metaError) {
-            logger.error({ err: metaError }, '无法获取音频元数据');
-            metadata = {
-                title: displayName,
-                artist: artist || 'Unknown',
-                album: '',
-                year: '',
-                genre: '',
-            };
+                // 创建歌曲对象
+                const newTrack = {
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                    path: finalPath,
+                    name: metadata.common.title || baseName,
+                    artist: metadata.common.artist || '',
+                    album: metadata.common.album || '',
+                    genre: metadata.common.genre || '',
+                    year: metadata.common.year || '',
+                    duration,
+                    addedAt: new Date().toISOString(),
+                    fileSize: file.size,
+                };
+
+                uploadedTracks.push(newTrack);
+            } catch (fileError) {
+                logger.error({ err: fileError }, '处理文件时出错');
+                // 继续处理其他文件而不是完全失败
+            }
+        }
+
+        // 如果没有成功处理任何文件
+        if (uploadedTracks.length === 0) {
+            return res.status(500).json({
+                success: false,
+                message: '没有文件被成功处理',
+            });
         }
 
         // 添加到播放列表
         const playlist = getPlaylist();
-        const newTrack = {
-            id: Date.now().toString(),
-            path: finalPath,
-            name: metadata.title,
-            artist: metadata.artist,
-            album: metadata.album,
-            genre: metadata.genre,
-            year: metadata.year,
-            duration,
-            addedAt: new Date().toISOString(),
-            fileSize: req.file.size,
-        };
-
-        playlist.push(newTrack);
+        playlist.push(...uploadedTracks);
 
         if (savePlaylist(playlist)) {
             res.json({
                 success: true,
-                message: '音频文件上传成功',
-                track: newTrack,
+                message: `成功上传 ${uploadedTracks.length} 个文件`,
+                tracks: uploadedTracks,
             });
         } else {
             res.status(500).json({
